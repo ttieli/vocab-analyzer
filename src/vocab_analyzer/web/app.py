@@ -13,6 +13,59 @@ from flask import Flask, jsonify
 from .session import cleanup_expired_sessions
 
 
+def _initialize_translation_system(app: Flask) -> None:
+    """
+    Initialize translation system on application startup.
+
+    This function attempts to automatically install and configure:
+    - Argos Translate English→Chinese model
+    - ECDICT dictionary (optional)
+
+    If automatic installation fails, a warning is logged and the app continues.
+    Users can still use the app but translation features will show errors.
+    """
+    try:
+        app.logger.info("="*70)
+        app.logger.info("Initializing Translation System...")
+        app.logger.info("="*70)
+
+        from ..translation.auto_setup import auto_setup, get_setup_instructions
+
+        # Run automatic setup (non-blocking, won't crash the app)
+        status = auto_setup()
+
+        # Log results
+        if status['argos_installed']:
+            app.logger.info("✅ Argos Translate: Ready")
+        else:
+            app.logger.warning("⚠️  Argos Translate: Not available")
+            app.logger.warning(f"   {status['argos_message']}")
+
+        if status['ecdict_installed']:
+            app.logger.info("✅ ECDICT Dictionary: Ready")
+        else:
+            app.logger.info("ℹ️  ECDICT Dictionary: Not available (optional)")
+            app.logger.info(f"   {status['ecdict_message']}")
+
+        if status['ready']:
+            app.logger.info("="*70)
+            app.logger.info("✅ Translation System Ready!")
+            app.logger.info("="*70)
+        else:
+            app.logger.warning("="*70)
+            app.logger.warning("⚠️  Translation System Incomplete")
+            app.logger.warning("="*70)
+            app.logger.warning("Translation features may not work properly.")
+            app.logger.warning("For manual setup instructions, see:")
+            app.logger.warning("  python -m vocab_analyzer.translation.auto_setup")
+            app.logger.warning("="*70)
+
+    except Exception as e:
+        app.logger.error(f"Error initializing translation system: {e}")
+        app.logger.error("Translation features may not work, but app will continue.")
+        app.logger.error("For manual setup: python -m vocab_analyzer.translation.auto_setup")
+
+
 def create_app(config: Optional[dict] = None) -> Flask:
     """Create and configure a Flask application instance.
 
@@ -49,6 +102,9 @@ def create_app(config: Optional[dict] = None) -> Flask:
         level=logging.INFO,
         format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
     )
+
+    # Initialize translation system on first startup
+    _initialize_translation_system(app)
 
     # Register error handlers
     @app.errorhandler(413)

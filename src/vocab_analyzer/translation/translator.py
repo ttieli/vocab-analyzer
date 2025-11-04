@@ -17,14 +17,16 @@ class ArgosTranslator:
     Offline neural machine translation using Argos Translate.
 
     Uses lazy loading strategy - model is loaded on first translation request.
-    Supports word, phrase, and sentence translation with 500 character limit.
+    Supports word, phrase, and sentence translation with configurable limits.
 
     Attributes:
         model_loaded: Whether translation model has been loaded
         translate_func: Argos translate function (loaded lazily)
     """
 
-    MAX_TEXT_LENGTH = 500
+    MAX_TEXT_LENGTH = 2000  # Increased for sentence translation
+    MAX_WORD_LENGTH = 100   # For single words
+    MAX_PHRASE_LENGTH = 200  # For phrases
 
     def __init__(self):
         """Initialize translator with lazy loading."""
@@ -45,30 +47,83 @@ class ArgosTranslator:
 
         try:
             import argostranslate.translate
-            self._argos_translate = argostranslate.translate
-            self.translate_func = argostranslate.translate.translate
+            import argostranslate.package
+            import ctranslate2
+            import sentencepiece as spm
 
-            # Test that model works
-            try:
-                test_result = self.translate_func("test", "en", "zh")
-                if not test_result:
-                    raise RuntimeError(
-                        "Translation returned empty result. "
-                        "Model may not be installed."
-                    )
-            except Exception as e:
+            self._argos_translate = argostranslate.translate
+
+            # Load installed languages
+            languages = argostranslate.translate.load_installed_languages()
+
+            # Find English and Chinese
+            en_lang = next((l for l in languages if l.code == 'en'), None)
+            zh_lang = next((l for l in languages if l.code == 'zh'), None)
+
+            if not en_lang or not zh_lang:
                 raise RuntimeError(
-                    f"English→Chinese model not available: {e}\\n"
-                    "Run: python scripts/setup_translation.py"
-                ) from e
+                    "English→Chinese model not installed. "
+                    "Run: python -m vocab_analyzer.translation.auto_setup"
+                )
+
+            # Get translation object
+            self._translation = en_lang.get_translation(zh_lang)
+            if not self._translation:
+                raise RuntimeError(
+                    "English→Chinese translation not available"
+                )
+
+            # Get the package for direct translation
+            packages = argostranslate.package.get_installed_packages()
+            self._pkg = next((p for p in packages if p.from_code == 'en' and p.to_code == 'zh'), None)
+
+            if not self._pkg:
+                raise RuntimeError("English→Chinese package not found")
+
+            # Load translation components directly (bypass stanza)
+            model_path = str(self._pkg.package_path / 'model')
+            self._translator = ctranslate2.Translator(model_path)
+            sp_model_path = str(self._pkg.package_path / 'sentencepiece.model')
+            self._sp_processor = spm.SentencePieceProcessor(model_file=sp_model_path)
+
+            # Create custom translate function
+            def translate_func(text, from_code, to_code):
+                # Simple sentence splitting (no stanza needed for words/phrases)
+                sentences = [s.strip() for s in text.split('.') if s.strip()]
+                if not sentences:
+                    sentences = [text]
+
+                result = ''
+                for sentence in sentences:
+                    tokenized = self._sp_processor.encode(sentence, out_type=str)
+                    translated = self._translator.translate_batch([tokenized])
+                    translated = translated[0][0]['tokens']
+                    detokenized = ''.join(translated)
+                    detokenized = detokenized.replace('▁', ' ')
+                    result += detokenized
+                    if len(sentences) > 1:
+                        result += '. '
+
+                # Remove leading space
+                if result and result[0] == ' ':
+                    result = result[1:]
+
+                return result.strip()
+
+            self.translate_func = translate_func
+
+            # Test translation
+            test_result = self.translate_func("test", "en", "zh")
+            if not test_result:
+                raise RuntimeError("Translation test failed")
 
             self.model_loaded = True
             logger.info("Argos Translate model loaded successfully")
 
         except ImportError as e:
             raise ImportError(
-                "argostranslate not installed. "
-                "Install with: pip install argostranslate"
+                f"Required library not installed: {e}. "
+                "Install with: pip install argostranslate ctranslate2 sentencepiece"
             ) from e
 
     def safe_translate(
@@ -107,14 +162,22 @@ class ArgosTranslator:
 
         text = text.strip()
 
-        if len(text) > self.MAX_TEXT_LENGTH:
+        # Determine appropriate length limit based on type
+        if translation_type == "word":
+            max_length = self.MAX_WORD_LENGTH
+        elif translation_type == "phrase":
+            max_length = self.MAX_PHRASE_LENGTH
+        else:  # sentence
+            max_length = self.MAX_TEXT_LENGTH
+
+        if len(text) > max_length:
             return {
                 "source_text": text,
                 "target_text": None,
                 "translation_type": translation_type,
                 "source": "argos",
                 "confidence_score": 0.0,
-                "error": f"Text exceeds {self.MAX_TEXT_LENGTH} character limit"
+                "error": f"Text exceeds {max_length} character limit for {translation_type}"
             }
 
         # Load model if needed

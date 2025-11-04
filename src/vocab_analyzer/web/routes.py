@@ -498,11 +498,19 @@ def translate_text():
                 "code": "EMPTY_TEXT"
             }), 400
 
-        if len(source_text) > 500:
+        # Type-specific character limits (matching translator.py)
+        max_lengths = {
+            'word': 100,
+            'phrase': 200,
+            'sentence': 2000
+        }
+        max_length = max_lengths.get(translation_type, 500)
+
+        if len(source_text) > max_length:
             return jsonify({
                 "success": False,
-                "error": "source_text exceeds 500 characters",
-                "error_cn": "源文本超过 500 字符",
+                "error": f"source_text exceeds {max_length} characters for {translation_type}",
+                "error_cn": f"源文本超过 {max_length} 字符（{translation_type}类型）",
                 "code": "TEXT_TOO_LONG"
             }), 400
 

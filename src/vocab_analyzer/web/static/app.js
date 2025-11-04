@@ -5,6 +5,23 @@ let analysisResults = null;  // Store full analysis results
 let currentFilter = 'all';  // Current CEFR level filter
 let searchTerm = '';  // Current search term
 
+// Initialize bilingual UI on page load
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof initBilingualUI === 'function') {
+        initBilingualUI();
+    }
+
+    // Hide translation tooltip when clicking outside
+    document.addEventListener('click', (e) => {
+        const tooltip = document.getElementById('translation-tooltip');
+        if (tooltip && !tooltip.contains(e.target) && !e.target.classList.contains('translate-btn')) {
+            if (typeof hideTranslationResult === 'function') {
+                hideTranslationResult();
+            }
+        }
+    });
+});
+
 // DOM Elements
 const uploadSection = document.getElementById('upload-section');
 const progressSection = document.getElementById('progress-section');
@@ -106,7 +123,12 @@ function connectToProgressStream(sessionId) {
     // Handle progress events
     eventSource.addEventListener('progress', (e) => {
         const data = JSON.parse(e.data);
-        updateProgress(data.progress, formatStageName(data.stage));
+        // Use bilingual progress update if available
+        if (typeof updateBilingualProgress === 'function') {
+            updateBilingualProgress(data.progress, data.stage);
+        } else {
+            updateProgress(data.progress, formatStageName(data.stage));
+        }
     });
 
     // Handle completion event
@@ -304,29 +326,132 @@ function updateWordDisplay() {
     wordCount.textContent = filteredWords.length;
     phraseCount.textContent = filteredPhrases.length;
 
+    // CEFR level colors
+    const cefrColors = {
+        'A1': '#4CAF50',
+        'A2': '#8BC34A',
+        'B1': '#FFC107',
+        'B2': '#FF9800',
+        'C1': '#FF5722',
+        'C2': '#F44336',
+        'C2+': '#9C27B0'
+    };
+
     // Render words
-    wordList.innerHTML = filteredWords.slice(0, 200).map(word => `
-        <div class="word-item" data-word='${JSON.stringify(word)}'>
-            <div class="word-text">${word.word}</div>
-            <div class="word-level">${word.level}</div>
-        </div>
-    `).join('');
+    wordList.innerHTML = filteredWords.slice(0, 200).map(word => {
+        const levelColor = cefrColors[word.level] || '#757575';
+        return `
+            <div class="word-item" data-word='${JSON.stringify(word)}'>
+                <button class="translate-btn" title="Translate / 翻译">翻</button>
+                <div class="word-text">${word.word}</div>
+                <div class="word-level" style="background-color: ${levelColor};">${word.level}</div>
+            </div>
+        `;
+    }).join('');
 
     // Render phrases
-    phraseList.innerHTML = filteredPhrases.slice(0, 100).map(phrase => `
-        <div class="word-item" data-word='${JSON.stringify(phrase)}'>
-            <div class="word-text">${phrase.phrase}</div>
-            <div class="word-level">${phrase.level}</div>
-        </div>
-    `).join('');
+    phraseList.innerHTML = filteredPhrases.slice(0, 100).map(phrase => {
+        const levelColor = cefrColors[phrase.level] || '#757575';
+        return `
+            <div class="word-item" data-word='${JSON.stringify(phrase)}'>
+                <button class="translate-btn" title="Translate / 翻译">翻</button>
+                <div class="word-text">${phrase.phrase}</div>
+                <div class="word-level" style="background-color: ${levelColor};">${phrase.level}</div>
+            </div>
+        `;
+    }).join('');
 
-    // Add click handlers for word details (T041)
+    // Add click handlers for word details
     document.querySelectorAll('.word-item').forEach(item => {
-        item.addEventListener('click', () => {
+        // Click on word item (not on translate button) to show details
+        item.addEventListener('click', (e) => {
+            // Ignore clicks on translate button
+            if (e.target.classList.contains('translate-btn')) {
+                return;
+            }
             const wordData = JSON.parse(item.getAttribute('data-word'));
             showWordDetails(wordData);
         });
     });
+
+    // Add translate button handlers
+    document.querySelectorAll('.translate-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation(); // Prevent triggering word detail modal
+
+            const wordItem = btn.closest('.word-item');
+            const wordData = JSON.parse(wordItem.getAttribute('data-word'));
+            const text = wordData.word || wordData.phrase;
+            const type = wordData.phrase ? 'phrase' : 'word';
+
+            // Check if translation is already displayed
+            let translationDiv = wordItem.querySelector('.translation-result');
+            if (translationDiv) {
+                // Toggle visibility
+                translationDiv.remove();
+                btn.textContent = '翻';
+                btn.classList.remove('active');
+                return;
+            }
+
+            // Check if already has translation in data
+            if (wordData.definition_cn) {
+                showInlineTranslation(wordItem, btn, {
+                    translation: wordData.definition_cn,
+                    source: 'cached',
+                    cached: true
+                });
+                return;
+            }
+
+            // Show loading state
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                if (typeof translateText === 'function') {
+                    const result = await translateText(text, type);
+                    showInlineTranslation(wordItem, btn, result);
+                } else {
+                    console.error('translateText function not found');
+                    alert('翻译功能未加载');
+                }
+            } catch (error) {
+                alert('翻译失败: ' + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+                btn.textContent = '翻';
+            }
+        });
+    });
+
+    // Helper function to show inline translation
+    function showInlineTranslation(wordItem, btn, result) {
+        // Remove any existing translation
+        const existing = wordItem.querySelector('.translation-result');
+        if (existing) existing.remove();
+
+        // Create translation display
+        const translationDiv = document.createElement('div');
+        translationDiv.className = 'translation-result';
+        translationDiv.innerHTML = `
+            <div class="translation-text">${result.translation || result.target_text || '翻译失败'}</div>
+            <div class="translation-meta">
+                <span>${result.source || 'Argos'}</span>
+                ${result.cached ? '<span>• 缓存</span>' : ''}
+            </div>
+        `;
+
+        // Insert after word text
+        const wordText = wordItem.querySelector('.word-text');
+        wordText.after(translationDiv);
+
+        // Update button state
+        btn.classList.add('active');
+        btn.textContent = '✕';
+    }
 }
 
 // Setup interactive filters (T039, T040)
@@ -367,10 +492,12 @@ function showWordDetails(wordData) {
     `;
 
     if (wordData.definition_cn) {
+        // Convert \n to <br> for proper line breaks
+        const formattedDefinition = wordData.definition_cn.replace(/\\n/g, '<br>');
         detailsHTML += `
             <div class="detail-row">
                 <div class="detail-label">Chinese Translation (中文释义)</div>
-                <div class="detail-value">${wordData.definition_cn}</div>
+                <div class="detail-value" style="white-space: normal;">${formattedDefinition}</div>
             </div>
         `;
     }
@@ -385,12 +512,18 @@ function showWordDetails(wordData) {
     }
 
     if (wordData.examples && wordData.examples.length > 0) {
-        const examples = wordData.examples.slice(0, 3).map(ex => `<li>${ex}</li>`).join('');
+        const examples = wordData.examples.slice(0, 3).map((ex, index) => `
+            <li class="example-item" data-example-index="${index}">
+                <div class="example-text">${ex}</div>
+                <button class="example-translate-btn" data-text="${ex.replace(/"/g, '&quot;')}" title="Translate sentence / 翻译句子">翻</button>
+                <div class="example-translation" style="display: none;"></div>
+            </li>
+        `).join('');
         detailsHTML += `
             <div class="detail-row">
                 <div class="detail-label">Example Sentences</div>
                 <div class="detail-value">
-                    <ul style="margin-top: 0.5rem; padding-left: 1.5rem;">
+                    <ul style="margin-top: 0.5rem; padding-left: 0; list-style: none;">
                         ${examples}
                     </ul>
                 </div>
@@ -399,6 +532,62 @@ function showWordDetails(wordData) {
     }
 
     modalDetails.innerHTML = detailsHTML;
+
+    // Add event listeners for example sentence translation buttons
+    document.querySelectorAll('.example-translate-btn').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+
+            const exampleItem = btn.closest('.example-item');
+            const translationDiv = exampleItem.querySelector('.example-translation');
+            const text = btn.getAttribute('data-text');
+
+            // Toggle translation visibility
+            if (translationDiv.style.display === 'block') {
+                translationDiv.style.display = 'none';
+                btn.textContent = '翻';
+                btn.classList.remove('active');
+                return;
+            }
+
+            // Check if already translated
+            if (translationDiv.innerHTML) {
+                translationDiv.style.display = 'block';
+                btn.textContent = '✕';
+                btn.classList.add('active');
+                return;
+            }
+
+            // Show loading
+            btn.classList.add('loading');
+            btn.disabled = true;
+            btn.textContent = '...';
+
+            try {
+                if (typeof translateText === 'function') {
+                    const result = await translateText(text, 'sentence');
+                    const translation = result.translation || result.target_text || '翻译失败';
+                    translationDiv.innerHTML = `
+                        <div class="example-translation-text">${translation}</div>
+                        <div class="example-translation-meta">
+                            <span>${result.source || 'Argos'}</span>
+                        </div>
+                    `;
+                    translationDiv.style.display = 'block';
+                    btn.textContent = '✕';
+                    btn.classList.add('active');
+                } else {
+                    alert('翻译功能未加载');
+                }
+            } catch (error) {
+                alert('翻译失败: ' + error.message);
+            } finally {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        });
+    });
+
     wordModal.classList.remove('hidden');
 }
 
@@ -465,7 +654,29 @@ function resetForm() {
 // Show error
 function showError(message) {
     hideAllSections();
-    errorText.textContent = message;
+
+    // Try to use bilingual error display if available
+    if (typeof showBilingualError === 'function') {
+        // For generic errors, show as bilingual
+        errorText.innerHTML = '';
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'bilingual';
+
+        const enSpan = document.createElement('span');
+        enSpan.className = 'en';
+        enSpan.textContent = message;
+
+        const cnSpan = document.createElement('span');
+        cnSpan.className = 'cn';
+        cnSpan.textContent = '发生错误'; // Generic Chinese error message
+
+        errorDiv.appendChild(enSpan);
+        errorDiv.appendChild(cnSpan);
+        errorText.appendChild(errorDiv);
+    } else {
+        errorText.textContent = message;
+    }
+
     showSection(errorSection);
 }
 
