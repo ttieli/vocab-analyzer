@@ -227,5 +227,50 @@ def _filter_by_level(analysis, min_level, max_level):
     return filtered
 
 
+@cli.command()
+@click.option(
+    "--host",
+    "-h",
+    default="127.0.0.1",
+    help="Host to bind the web server (default: 127.0.0.1)",
+)
+@click.option(
+    "--port", "-p", default=5000, type=int, help="Port to bind the web server (default: 5000)"
+)
+@click.option("--debug", is_flag=True, help="Run in debug mode with auto-reload")
+def web(host, port, debug):
+    """
+    Start the web interface for vocabulary analysis.
+
+    Example:
+        vocab-analyzer web --debug
+        vocab-analyzer web --host 0.0.0.0 --port 8080
+    """
+    try:
+        from ..web.app import create_app
+
+        console.print(f"\n[bold blue]Starting Vocabulary Analyzer Web Interface[/bold blue]")
+        console.print(f"[dim]Server: http://{host}:{port}[/dim]")
+        console.print(f"[dim]Debug mode: {'ON' if debug else 'OFF'}[/dim]\n")
+
+        if not debug:
+            console.print(
+                "[yellow]Tip: Use --debug flag for development with auto-reload[/yellow]\n"
+            )
+
+        app = create_app()
+        app.run(host=host, port=port, debug=debug)
+
+    except ImportError as e:
+        console.print(
+            f"\n[bold red]Error:[/bold red] Flask web dependencies not installed", style="red"
+        )
+        console.print(f"[dim]Install with: pip install 'Flask>=3.0.0' 'pytest-flask>=1.3.0'[/dim]")
+        sys.exit(1)
+    except Exception as e:
+        console.print(f"\n[bold red]Error:[/bold red] {e}", style="red")
+        sys.exit(1)
+
+
 if __name__ == "__main__":
     cli()

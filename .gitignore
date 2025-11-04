@@ -74,3 +74,13 @@ data/phrases/phrasal-verbs/
 dist/
 build/
 *.egg-info/
+
+# Flask/Web
+.env
+.env.*
+!.env.example
+instance/
+.webassets-cache
+uploads/
+*.db
+*.sqlite
