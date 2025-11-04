@@ -1,0 +1,294 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-11-04",
+  "categories": ["navigation", "buttons", "labels", "errors", "loading", "headings", "descriptions", "cefr"],
+  "strings": {
+    "navigation.home": {
+      "key": "navigation.home",
+      "text_en": "Home",
+      "text_cn": "首页",
+      "context": "Main navigation menu - homepage link",
+      "category": "navigation"
+    },
+    "navigation.upload": {
+      "key": "navigation.upload",
+      "text_en": "Upload",
+      "text_cn": "上传",
+      "context": "Main navigation menu - upload page link",
+      "category": "navigation"
+    },
+    "navigation.results": {
+      "key": "navigation.results",
+      "text_en": "Results",
+      "text_cn": "结果",
+      "context": "Main navigation menu - results page link",
+      "category": "navigation"
+    },
+    "headings.app_title": {
+      "key": "headings.app_title",
+      "text_en": "English Vocabulary Analyzer",
+      "text_cn": "英语词汇分析器",
+      "context": "Application main title",
+      "category": "headings"
+    },
+    "headings.upload_page": {
+      "key": "headings.upload_page",
+      "text_en": "Upload Document",
+      "text_cn": "上传文档",
+      "context": "Upload page heading",
+      "category": "headings"
+    },
+    "headings.results_page": {
+      "key": "headings.results_page",
+      "text_en": "Analysis Results",
+      "text_cn": "分析结果",
+      "context": "Results page heading",
+      "category": "headings"
+    },
+    "headings.vocabulary_breakdown": {
+      "key": "headings.vocabulary_breakdown",
+      "text_en": "Vocabulary by CEFR Level",
+      "text_cn": "按 CEFR 等级分类的词汇",
+      "context": "Vocabulary breakdown section heading",
+      "category": "headings"
+    },
+    "headings.statistics": {
+      "key": "headings.statistics",
+      "text_en": "Statistics",
+      "text_cn": "统计信息",
+      "context": "Statistics section heading",
+      "category": "headings"
+    },
+    "headings.phrases": {
+      "key": "headings.phrases",
+      "text_en": "Phrasal Verbs",
+      "text_cn": "短语动词",
+      "context": "Phrases section heading",
+      "category": "headings"
+    },
+    "buttons.analyze": {
+      "key": "buttons.analyze",
+      "text_en": "Analyze",
+      "text_cn": "分析",
+      "context": "Upload form submit button",
+      "category": "buttons"
+    },
+    "buttons.translate": {
+      "key": "buttons.translate",
+      "text_en": "Translate",
+      "text_cn": "翻译",
+      "context": "Translation request button",
+      "category": "buttons"
+    },
+    "buttons.upload_another": {
+      "key": "buttons.upload_another",
+      "text_en": "Upload Another File",
+      "text_cn": "上传另一个文件",
+      "context": "Button to return to upload page",
+      "category": "buttons"
+    },
+    "buttons.export": {
+      "key": "buttons.export",
+      "text_en": "Export",
+      "text_cn": "导出",
+      "context": "Export results button",
+      "category": "buttons"
+    },
+    "labels.file_input": {
+      "key": "labels.file_input",
+      "text_en": "File",
+      "text_cn": "文件",
+      "context": "File upload input label",
+      "category": "labels"
+    },
+    "labels.supported_formats": {
+      "key": "labels.supported_formats",
+      "text_en": "Supported formats: TXT, PDF, DOCX, JSON",
+      "text_cn": "支持的格式: TXT, PDF, DOCX, JSON",
+      "context": "File upload format hint",
+      "category": "labels"
+    },
+    "labels.max_file_size": {
+      "key": "labels.max_file_size",
+      "text_en": "Maximum file size: 10MB",
+      "text_cn": "最大文件大小: 10MB",
+      "context": "File size limit hint",
+      "category": "labels"
+    },
+    "labels.total_words": {
+      "key": "labels.total_words",
+      "text_en": "Total Words",
+      "text_cn": "总词数",
+      "context": "Total word count label",
+      "category": "labels"
+    },
+    "labels.unique_words": {
+      "key": "labels.unique_words",
+      "text_en": "Unique Words",
+      "text_cn": "唯一词数",
+      "context": "Unique word count label",
+      "category": "labels"
+    },
+    "labels.lexical_density": {
+      "key": "labels.lexical_density",
+      "text_en": "Lexical Density",
+      "text_cn": "词汇密度",
+      "context": "Lexical density metric label",
+      "category": "labels"
+    },
+    "labels.dominant_level": {
+      "key": "labels.dominant_level",
+      "text_en": "Dominant CEFR Level",
+      "text_cn": "主导 CEFR 等级",
+      "context": "Dominant CEFR level label",
+      "category": "labels"
+    },
+    "labels.level": {
+      "key": "labels.level",
+      "text_en": "Level",
+      "text_cn": "等级",
+      "context": "CEFR level label",
+      "category": "labels"
+    },
+    "labels.word_count": {
+      "key": "labels.word_count",
+      "text_en": "Word Count",
+      "text_cn": "词数",
+      "context": "Word count label",
+      "category": "labels"
+    },
+    "labels.percentage": {
+      "key": "labels.percentage",
+      "text_en": "Percentage",
+      "text_cn": "百分比",
+      "context": "Percentage label",
+      "category": "labels"
+    },
+    "labels.examples": {
+      "key": "labels.examples",
+      "text_en": "Examples",
+      "text_cn": "示例",
+      "context": "Examples label",
+      "category": "labels"
+    },
+    "descriptions.upload_instruction": {
+      "key": "descriptions.upload_instruction",
+      "text_en": "Upload a document to analyze its vocabulary complexity and get word breakdowns by CEFR proficiency levels.",
+      "text_cn": "上传文档以分析其词汇复杂度，并按 CEFR 熟练度等级获取词汇分类。",
+      "context": "Upload page instruction text",
+      "category": "descriptions"
+    },
+    "descriptions.cefr_explanation": {
+      "key": "descriptions.cefr_explanation",
+      "text_en": "CEFR (Common European Framework of Reference) levels range from A1 (beginner) to C2+ (mastery).",
+      "text_cn": "CEFR（欧洲语言共同参考框架）等级范围从 A1（初学者）到 C2+（精通）。",
+      "context": "CEFR explanation text",
+      "category": "descriptions"
+    },
+    "descriptions.hover_for_info": {
+      "key": "descriptions.hover_for_info",
+      "text_en": "Hover over CEFR badges for more information",
+      "text_cn": "将鼠标悬停在 CEFR 标签上以获取更多信息",
+      "context": "Tooltip interaction hint",
+      "category": "descriptions"
+    },
+    "errors.file_too_large": {
+      "key": "errors.file_too_large",
+      "text_en": "File size exceeds 10MB limit",
+      "text_cn": "文件大小超过 10MB 限制",
+      "context": "File upload size validation error",
+      "category": "errors"
+    },
+    "errors.invalid_format": {
+      "key": "errors.invalid_format",
+      "text_en": "Invalid file format",
+      "text_cn": "无效的文件格式",
+      "context": "File upload format validation error",
+      "category": "errors"
+    },
+    "errors.upload_failed": {
+      "key": "errors.upload_failed",
+      "text_en": "Upload failed. Please try again.",
+      "text_cn": "上传失败。请重试。",
+      "context": "Generic upload error message",
+      "category": "errors"
+    },
+    "errors.analysis_failed": {
+      "key": "errors.analysis_failed",
+      "text_en": "Analysis failed. Please check your file and try again.",
+      "text_cn": "分析失败。请检查您的文件并重试。",
+      "context": "Analysis error message",
+      "category": "errors"
+    },
+    "errors.translation_unavailable": {
+      "key": "errors.translation_unavailable",
+      "text_en": "Translation unavailable",
+      "text_cn": "翻译不可用",
+      "context": "Translation service error",
+      "category": "errors"
+    },
+    "errors.no_file_selected": {
+      "key": "errors.no_file_selected",
+      "text_en": "No file selected",
+      "text_cn": "未选择文件",
+      "context": "No file selected error",
+      "category": "errors"
+    },
+    "loading.uploading": {
+      "key": "loading.uploading",
+      "text_en": "Uploading...",
+      "text_cn": "上传中...",
+      "context": "Upload in progress indicator",
+      "category": "loading"
+    },
+    "loading.analyzing": {
+      "key": "loading.analyzing",
+      "text_en": "Analyzing...",
+      "text_cn": "分析中...",
+      "context": "Analysis in progress indicator",
+      "category": "loading"
+    },
+    "loading.translating": {
+      "key": "loading.translating",
+      "text_en": "Translating...",
+      "text_cn": "翻译中...",
+      "context": "Translation in progress indicator",
+      "category": "loading"
+    },
+    "loading.loading_model": {
+      "key": "loading.loading_model",
+      "text_en": "Loading translation model (first time only)...",
+      "text_cn": "正在加载翻译模型（仅第一次）...",
+      "context": "Argos Translate lazy loading indicator",
+      "category": "loading"
+    },
+    "cefr.click_for_details": {
+      "key": "cefr.click_for_details",
+      "text_en": "Click for detailed information",
+      "text_cn": "点击查看详细信息",
+      "context": "CEFR badge click hint",
+      "category": "cefr"
+    },
+    "cefr.vocabulary_size": {
+      "key": "cefr.vocabulary_size",
+      "text_en": "Vocabulary Size",
+      "text_cn": "词汇量",
+      "context": "CEFR vocabulary size label",
+      "category": "cefr"
+    },
+    "cefr.example_words": {
+      "key": "cefr.example_words",
+      "text_en": "Example Words",
+      "text_cn": "示例单词",
+      "context": "CEFR example words label",
+      "category": "cefr"
+    },
+    "cefr.learning_context": {
+      "key": "cefr.learning_context",
+      "text_en": "Learning Context",
+      "text_cn": "学习情境",
+      "context": "CEFR learning context label",
+      "category": "cefr"
+    }
+  }
+}

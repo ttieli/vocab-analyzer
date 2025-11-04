@@ -3,14 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vocabulary Analyzer - Web Interface</title>
+    <title>Vocabulary Analyzer / 词汇分析器</title>
     <link rel="stylesheet" href="/static/styles.css">
 </head>
 <body>
     <div class="container">
         <header>
-            <h1>📚 Vocabulary Analyzer</h1>
-            <p class="subtitle">Analyze English book vocabulary by CEFR levels</p>
+            <h1 class="bilingual">
+                <span class="en">📚 Vocabulary Analyzer</span>
+                <span class="cn">词汇分析器</span>
+            </h1>
+            <p class="subtitle bilingual">
+                <span class="en">Analyze English book vocabulary by CEFR levels</span>
+                <span class="cn">按 CEFR 级别分析英文书籍词汇</span>
+            </p>
         </header>
 
         <!-- Upload Section -->
@@ -18,27 +24,43 @@
             <form id="upload-form" enctype="multipart/form-data">
                 <div class="file-input-wrapper">
                     <input type="file" id="file-input" name="file" accept=".txt,.pdf,.docx" required>
-                    <label for="file-input" class="file-label">
-                        <span id="file-name">Choose a file...</span>
-                        <span class="browse-btn">Browse</span>
+                    <label for="file-input" class="file-label bilingual">
+                        <span id="file-name" class="bilingual">
+                            <span class="en">Choose a file...</span>
+                            <span class="cn">选择文件...</span>
+                        </span>
+                        <span class="browse-btn bilingual">
+                            <span class="en">Browse</span>
+                            <span class="cn">浏览</span>
+                        </span>
                     </label>
                 </div>
-                <p class="help-text">Supported formats: TXT, PDF, DOCX (max 50MB)</p>
-                <button type="submit" class="btn btn-primary" id="analyze-btn">
-                    Analyze Book
+                <p class="help-text bilingual">
+                    <span class="en">Supported formats: TXT, PDF, DOCX (max 50MB)</span>
+                    <span class="cn">支持的格式: TXT, PDF, DOCX (最大 50MB)</span>
+                </p>
+                <button type="submit" class="btn btn-primary bilingual" id="analyze-btn">
+                    <span class="en">Analyze Book</span>
+                    <span class="cn">分析书籍</span>
                 </button>
             </form>
         </div>
 
         <!-- Progress Section (hidden by default) -->
         <div id="progress-section" class="section hidden">
-            <h2>Analyzing...</h2>
+            <h2 class="bilingual">
+                <span class="en">Analyzing...</span>
+                <span class="cn">分析中...</span>
+            </h2>
             <div class="progress-container">
                 <div class="progress-bar">
                     <div class="progress-fill" id="progress-fill"></div>
                 </div>
                 <div class="progress-info">
-                    <span id="progress-stage">Initializing...</span>
+                    <span id="progress-stage" class="bilingual">
+                        <span class="en">Initializing...</span>
+                        <span class="cn">初始化中...</span>
+                    </span>
                     <span id="progress-percent">0%</span>
                 </div>
             </div>
@@ -46,7 +68,10 @@
 
         <!-- Results Section (hidden by default) -->
         <div id="results-section" class="section hidden">
-            <h2>Analysis Complete!</h2>
+            <h2 class="bilingual">
+                <span class="en">Analysis Complete!</span>
+                <span class="cn">分析完成！</span>
+            </h2>
 
             <!-- Statistics Summary -->
             <div class="stats-summary" id="stats-summary">
@@ -55,9 +80,15 @@
 
             <!-- Interactive Filters -->
             <div class="filters-section">
-                <h3>Filter by CEFR Level</h3>
+                <h3 class="bilingual">
+                    <span class="en">Filter by CEFR Level</span>
+                    <span class="cn">按 CEFR 级别筛选</span>
+                </h3>
                 <div class="level-filters" id="level-filters">
-                    <button class="filter-btn active" data-level="all">All Levels</button>
+                    <button class="filter-btn active bilingual" data-level="all">
+                        <span class="en">All Levels</span>
+                        <span class="cn">所有级别</span>
+                    </button>
                     <button class="filter-btn" data-level="A1">A1</button>
                     <button class="filter-btn" data-level="A2">A2</button>
                     <button class="filter-btn" data-level="B1">B1</button>
@@ -71,7 +102,7 @@
                     <input
                         type="text"
                         id="word-search"
-                        placeholder="Search for words..."
+                        placeholder="Search for words... / 搜索单词..."
                         class="search-input"
                     />
                 </div>
@@ -80,14 +111,22 @@
             <!-- Word Lists -->
             <div class="results-container">
                 <div class="word-list-section">
-                    <h3>Words <span id="word-count" class="count-badge">0</span></h3>
+                    <h3 class="bilingual">
+                        <span class="en">Words</span>
+                        <span class="cn">单词</span>
+                        <span id="word-count" class="count-badge">0</span>
+                    </h3>
                     <div id="word-list" class="word-list">
                         <!-- Words will be populated by JavaScript -->
                     </div>
                 </div>
 
                 <div class="word-list-section">
-                    <h3>Phrasal Verbs <span id="phrase-count" class="count-badge">0</span></h3>
+                    <h3 class="bilingual">
+                        <span class="en">Phrasal Verbs</span>
+                        <span class="cn">短语动词</span>
+                        <span id="phrase-count" class="count-badge">0</span>
+                    </h3>
                     <div id="phrase-list" class="word-list">
                         <!-- Phrasal verbs will be populated by JavaScript -->
                     </div>
@@ -107,29 +146,37 @@
 
             <!-- Download Buttons -->
             <div class="download-buttons">
-                <button class="btn btn-download" id="download-json">
-                    Download JSON
+                <button class="btn btn-download bilingual" id="download-json">
+                    <span class="en">Download JSON</span>
+                    <span class="cn">下载 JSON</span>
                 </button>
-                <button class="btn btn-download" id="download-csv">
-                    Download CSV
+                <button class="btn btn-download bilingual" id="download-csv">
+                    <span class="en">Download CSV</span>
+                    <span class="cn">下载 CSV</span>
                 </button>
-                <button class="btn btn-download" id="download-markdown">
-                    Download Markdown
+                <button class="btn btn-download bilingual" id="download-markdown">
+                    <span class="en">Download Markdown</span>
+                    <span class="cn">下载 Markdown</span>
                 </button>
             </div>
 
-            <button class="btn btn-secondary" id="analyze-another">
-                Analyze Another Book
+            <button class="btn btn-secondary bilingual" id="analyze-another">
+                <span class="en">Analyze Another Book</span>
+                <span class="cn">分析另一本书</span>
             </button>
         </div>
 
         <!-- Error Section (hidden by default) -->
         <div id="error-section" class="section hidden">
             <div class="error-message">
-                <h2>Error</h2>
+                <h2 class="bilingual">
+                    <span class="en">Error</span>
+                    <span class="cn">错误</span>
+                </h2>
                 <p id="error-text"></p>
-                <button class="btn btn-secondary" id="try-again">
-                    Try Again
+                <button class="btn btn-secondary bilingual" id="try-again">
+                    <span class="en">Try Again</span>
+                    <span class="cn">重试</span>
                 </button>
             </div>
         </div>

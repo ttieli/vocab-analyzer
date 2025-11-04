@@ -66,6 +66,14 @@ data/dictionaries/ECDICT/*.db
 data/sample_books/*.txt
 data/phrases/phrasal-verbs/
 
+# Translation models and dictionaries (Feature 002)
+data/translation_models/*.argosmodel
+data/translation_models/*.pt
+data/translation_models/*.bin
+data/dictionaries/*.mdx
+data/dictionaries/*.mdd
+data/translation_cache.json
+
 # Keep structure files
 !data/README.md
 !data/**/.gitkeep

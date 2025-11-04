@@ -481,6 +481,315 @@ h1 {
     color: var(--text-secondary);
 }
 
+/* Bilingual Text Styles */
+.bilingual {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.bilingual .en {
+    font-size: 1em;
+    color: var(--text-color);
+    font-weight: inherit;
+}
+
+.bilingual .cn {
+    font-size: 0.85em;
+    color: var(--text-secondary);
+    font-weight: inherit;
+}
+
+/* Bilingual text in headers */
+h1.bilingual {
+    gap: 0.5rem;
+}
+
+h1.bilingual .en {
+    font-size: 1em;
+}
+
+h1.bilingual .cn {
+    font-size: 0.75em;
+}
+
+h2.bilingual, h3.bilingual {
+    gap: 0.3rem;
+}
+
+h2.bilingual .cn, h3.bilingual .cn {
+    font-size: 0.8em;
+}
+
+/* Bilingual text in buttons */
+.btn.bilingual {
+    flex-direction: row;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.btn.bilingual .en::after {
+    content: " /";
+    margin-left: 0.25rem;
+    opacity: 0.5;
+}
+
+.btn.bilingual .cn {
+    color: inherit;
+    opacity: 0.9;
+}
+
+/* Bilingual text in filter buttons */
+.filter-btn.bilingual {
+    flex-direction: row;
+    gap: 0.3rem;
+}
+
+.filter-btn.bilingual .en::after {
+    content: " /";
+    margin-left: 0.15rem;
+    opacity: 0.5;
+}
+
+/* Bilingual text in inline elements */
+.bilingual.inline {
+    flex-direction: row;
+    gap: 0.5rem;
+}
+
+.bilingual.inline .en::after {
+    content: " /";
+    margin-left: 0.25rem;
+    opacity: 0.5;
+}
+
+/* CEFR Badge Styles */
+.cefr-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.25rem 0.75rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.cefr-badge:hover {
+    transform: scale(1.05);
+    box-shadow: var(--shadow);
+}
+
+.cefr-badge-A1 {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.cefr-badge-A2 {
+    background: #dbeafe;
+    color: #1e40af;
+}
+
+.cefr-badge-B1 {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.cefr-badge-B2 {
+    background: #fed7aa;
+    color: #9a3412;
+}
+
+.cefr-badge-C1 {
+    background: #fecaca;
+    color: #991b1b;
+}
+
+.cefr-badge-C2 {
+    background: #e9d5ff;
+    color: #6b21a8;
+}
+
+.cefr-badge-C2\+ {
+    background: #f3e8ff;
+    color: #6b21a8;
+}
+
+/* CEFR Tooltip */
+.cefr-tooltip {
+    position: absolute;
+    background: rgba(0, 0, 0, 0.9);
+    color: white;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    white-space: nowrap;
+    z-index: 100;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.cefr-tooltip.visible {
+    opacity: 1;
+}
+
+.cefr-tooltip .en {
+    display: block;
+    margin-bottom: 0.25rem;
+}
+
+.cefr-tooltip .cn {
+    display: block;
+    opacity: 0.8;
+    font-size: 0.8em;
+}
+
+/* CEFR Modal */
+.cefr-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 2000;
+}
+
+.cefr-modal-content {
+    background: white;
+    padding: 2.5rem;
+    border-radius: 16px;
+    max-width: 600px;
+    width: 90%;
+    max-height: 85vh;
+    overflow-y: auto;
+    position: relative;
+    box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3);
+}
+
+.cefr-modal-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border-color);
+}
+
+.cefr-modal-title {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--primary-color);
+    flex: 1;
+}
+
+.cefr-modal-close {
+    font-size: 2rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    line-height: 1;
+    transition: color 0.3s ease;
+}
+
+.cefr-modal-close:hover {
+    color: var(--text-color);
+}
+
+.cefr-modal-section {
+    margin-bottom: 1.5rem;
+}
+
+.cefr-modal-label {
+    font-weight: 600;
+    color: var(--text-color);
+    margin-bottom: 0.5rem;
+    font-size: 1rem;
+}
+
+.cefr-modal-value {
+    color: var(--text-secondary);
+    line-height: 1.8;
+}
+
+.cefr-modal-value.bilingual {
+    display: block;
+}
+
+.cefr-modal-value .en {
+    display: block;
+    margin-bottom: 0.5rem;
+    color: var(--text-color);
+}
+
+.cefr-modal-value .cn {
+    display: block;
+    color: var(--text-secondary);
+    font-size: 0.95em;
+}
+
+.cefr-example-words {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.cefr-example-word {
+    padding: 0.25rem 0.75rem;
+    background: var(--background);
+    border-radius: 6px;
+    font-size: 0.875rem;
+    color: var(--text-color);
+}
+
+/* Translation Button */
+.translate-btn {
+    padding: 0.5rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.875rem;
+    transition: all 0.3s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.translate-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+}
+
+.translate-btn:disabled {
+    background: var(--text-secondary);
+    cursor: not-allowed;
+    transform: none;
+}
+
+.translate-btn.loading {
+    opacity: 0.7;
+    cursor: wait;
+}
+
+/* Chinese Font Support */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial,
+                 'Noto Sans', 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
+                 'Microsoft YaHei', 'Source Han Sans', 'WenQuanYi Micro Hei', sans-serif;
+}
+
+.cn {
+    font-family: 'Noto Sans CJK SC', 'Noto Sans SC', 'PingFang SC', 'Hiragino Sans GB',
+                 'Microsoft YaHei', 'Source Han Sans', 'WenQuanYi Micro Hei', sans-serif;
+}
+
 /* Responsive */
 @media (min-width: 768px) {
     .download-buttons {
@@ -501,5 +810,34 @@ h1 {
 
     .word-list {
         grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
+
+    /* Adjust bilingual layout for desktop */
+    h1.bilingual, h2.bilingual {
+        flex-direction: row;
+        gap: 0.75rem;
+    }
+
+    h1.bilingual .en::after, h2.bilingual .en::after {
+        content: " /";
+        margin-left: 0.25rem;
+        opacity: 0.5;
+    }
+
+    h1.bilingual .cn, h2.bilingual .cn {
+        font-size: 0.85em;
+        color: var(--text-secondary);
+    }
+}
+
+@media (max-width: 767px) {
+    /* Stack bilingual text vertically on mobile */
+    .btn.bilingual {
+        flex-direction: column;
+        gap: 0.25rem;
+    }
+
+    .btn.bilingual .en::after {
+        content: none;
     }
 }
