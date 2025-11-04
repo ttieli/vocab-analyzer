@@ -168,23 +168,23 @@ Tasks are organized into 6 phases, with user stories implemented independently:
   - Test bilingual formatting with separator
   - **Coverage**: Minimum 80% enforced by CI (pytest-cov with --cov-fail-under=80)
 
-- [ ] T018 Update base HTML template with bilingual structure in src/vocab_analyzer/web/templates/base.html
+- [X] T018 Update base HTML template with bilingual structure in src/vocab_analyzer/web/static/index.html
   - Add bilingual title pattern: "English / 中文"
   - Update navigation menu with bilingual links
   - Include bilingual footer
 
-- [ ] T019 Update upload page template in src/vocab_analyzer/web/templates/upload.html
+- [X] T019 Update upload page template in src/vocab_analyzer/web/static/index.html
   - Bilingual page heading
   - Bilingual form labels and hints
   - Bilingual file format description
   - Bilingual submit button
 
-- [ ] T020 Update results page template in src/vocab_analyzer/web/templates/results.html
+- [X] T020 Update results page template in src/vocab_analyzer/web/static/index.html
   - Bilingual section headings (Statistics, CEFR Distribution, Word List)
   - Bilingual table headers
   - Bilingual status messages
 
-- [ ] T021 Create CSS styles for bilingual text in src/vocab_analyzer/web/static/styles.css
+- [X] T021 Create CSS styles for bilingual text in src/vocab_analyzer/web/static/styles.css
   - Add .bilingual-text, .bilingual-heading, .bilingual-button classes
   - Support responsive layout (stack vertically on mobile)
   - Include Chinese font stack (PingFang SC, Noto Sans SC, Microsoft YaHei)
@@ -195,12 +195,12 @@ Tasks are organized into 6 phases, with user stories implemented independently:
   - Add showBilingualError() for error messages
   - Include bilingual loading states
 
-- [ ] T023 Update Flask routes to pass bilingual strings in src/vocab_analyzer/web/routes.py
+- [X] T023 Update Flask routes to pass bilingual strings in src/vocab_analyzer/web/routes.py
   - Load BilingualStringLoader at startup
   - Pass UI strings to all templates
   - Handle bilingual error messages
 
-- [ ] T024 Add API endpoint GET /api/ui/strings in src/vocab_analyzer/web/app.py
+- [X] T024 Add API endpoint GET /api/ui/strings in src/vocab_analyzer/web/routes.py
   - Implement endpoint per contracts/translation-api.yaml
   - Support optional category filter
   - Return bilingual strings in JSON format
@@ -231,7 +231,7 @@ Tasks are organized into 6 phases, with user stories implemented independently:
 
 ### Tasks
 
-- [ ] T027 Add translation API endpoint POST /api/translate in src/vocab_analyzer/web/app.py
+- [X] T027 Add translation API endpoint POST /api/translate in src/vocab_analyzer/web/routes.py
   - Implement per contracts/translation-api.yaml specification
   - Validate request body (source_text, translation_type)
   - Return TranslationResponse with source and confidence score
@@ -316,13 +316,13 @@ Tasks are organized into 6 phases, with user stories implemented independently:
 
 ### Tasks
 
-- [ ] T037 Create CEFR definitions data file in data/cefr_definitions.json
+- [X] T037 Create CEFR definitions data file in data/cefr_definitions.json
   - Include all 7 levels: A1, A2, B1, B2, C1, C2, C2+
   - Follow CEFRDefinition schema from data-model.md
   - Include bilingual descriptions, vocabulary sizes, example words, learning contexts
   - Source content from research.md (Council of Europe CEFR)
 
-- [ ] T038 Create CEFRDefinitionLoader class in src/vocab_analyzer/translation/cefr_loader.py
+- [X] T038 Create CEFRDefinitionLoader class in src/vocab_analyzer/translation/config.py
   - Implement load(), get_by_level(), get_all(), validate_all() methods
   - Load definitions at application startup
   - Cache in memory (small data ~20KB)
@@ -333,12 +333,12 @@ Tasks are organized into 6 phases, with user stories implemented independently:
   - Test validation of completeness
   - **Coverage**: Minimum 80% enforced by CI (pytest-cov with --cov-fail-under=80)
 
-- [ ] T040 Add CEFR API endpoint GET /api/cefr/{level} in src/vocab_analyzer/web/app.py
+- [X] T040 Add CEFR API endpoint GET /api/cefr/{level} in src/vocab_analyzer/web/routes.py
   - Implement per contracts/translation-api.yaml
   - Return CEFRDefinition for specific level
   - Handle 404 for invalid level codes
 
-- [ ] T041 Add CEFR API endpoint GET /api/cefr for all levels
+- [X] T041 Add CEFR API endpoint GET /api/cefr for all levels
   - Return all 7 CEFR level definitions
   - Include version and last_updated metadata
   - Cache response (static data)
