@@ -3,6 +3,7 @@
 Auto-generated from all feature plans. Last updated: 2025-11-04
 
 ## Active Technologies
+- Python 3.13+ (existing project standard) (002-bilingual-ui-translation)
 
 - Python 3.10+ (matching existing project) + Flask 3.0+ (web framework), existing vocab_analyzer modules (unchanged) (001-web-frontend)
 
@@ -22,6 +23,7 @@ cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLO
 Python 3.10+ (matching existing project): Follow standard conventions
 
 ## Recent Changes
+- 002-bilingual-ui-translation: Added Python 3.13+ (existing project standard)
 
 - 001-web-frontend: Added Python 3.10+ (matching existing project) + Flask 3.0+ (web framework), existing vocab_analyzer modules (unchanged)
 

@@ -1,0 +1,9 @@
+# Ignore all translation model files (user downloads)
+*.argosmodel
+*.pt
+*.bin
+*.ckpt
+*.pth
+
+# Keep this directory structure in git
+!.gitignore

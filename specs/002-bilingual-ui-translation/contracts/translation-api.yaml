@@ -1,0 +1,975 @@
+openapi: 3.0.3
+info:
+  title: Bilingual UI Translation API
+  description: |
+    Translation API for the vocabulary analyzer's bilingual UI feature.
+
+    This API provides:
+    - Translation services with three-tier fallback (ECDICT → Mdict → Argos Translate)
+    - CEFR level descriptions in both English and Chinese
+    - Bilingual UI strings for interface localization
+    - Dictionary management and cache statistics
+
+    **Design Principles:**
+    - Offline-first architecture (all data stored locally)
+    - Bilingual dual-display (English/Chinese simultaneous)
+    - Graceful degradation (handle missing dictionaries/models)
+    - Persistent caching (reduce redundant translations)
+
+    **Related Documentation:**
+    - [Data Model](../data-model.md)
+    - [Research Findings](../research.md)
+    - [Feature Specification](../spec.md)
+  version: 1.0.0
+  contact:
+    name: Vocabulary Analyzer Team
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Local development server
+  - url: http://127.0.0.1:5000
+    description: Local development server (IPv4)
+
+tags:
+  - name: Translation
+    description: Translation operations with fallback chain
+  - name: CEFR
+    description: CEFR level descriptions and educational content
+  - name: UI Strings
+    description: Bilingual UI localization strings
+  - name: Dictionaries
+    description: Mdict dictionary management
+  - name: Cache
+    description: Translation cache management and statistics
+
+paths:
+  /api/translate:
+    post:
+      tags:
+        - Translation
+      summary: Translate text using fallback chain
+      description: |
+        Translate English text to Chinese using three-tier fallback:
+        1. **ECDICT** - Fast dictionary lookup for single words
+        2. **Mdict** - Professional dictionaries for phrases and detailed definitions
+        3. **Argos Translate** - Neural machine translation for any content
+
+        **Performance Targets:**
+        - Cached: <100ms
+        - ECDICT: <10ms
+        - Mdict: <50ms
+        - Argos (first time): <3s
+        - Argos (cached): <500ms
+
+        **Caching:**
+        - All successful translations are automatically cached
+        - Cache key: `{translation_type}:{lowercase_source_text}`
+        - Cache is persistent across sessions
+      operationId: translateText
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TranslationRequest'
+            examples:
+              word:
+                summary: Translate a single word
+                value:
+                  source_text: sophisticated
+                  translation_type: word
+                  user_context: from vocabulary analysis results
+              phrase:
+                summary: Translate a phrasal verb
+                value:
+                  source_text: run out
+                  translation_type: phrase
+              sentence:
+                summary: Translate an example sentence
+                value:
+                  source_text: Time is running out for us to act.
+                  translation_type: sentence
+                  user_context: example sentence from results page
+      responses:
+        '200':
+          description: Translation successful
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Cache-Control:
+              schema:
+                type: string
+                example: no-cache
+              description: Translations are cached server-side, not browser-side
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranslationResponse'
+              examples:
+                ecdict_word:
+                  summary: ECDICT translation (word)
+                  value:
+                    success: true
+                    translation: "a. 精密的, 复杂的, 久经世故的, 老练的"
+                    source: ecdict
+                    cached: false
+                    confidence_score: 0.95
+                    timestamp: 1730736000
+                mdict_phrase:
+                  summary: Mdict translation (phrase)
+                  value:
+                    success: true
+                    translation: "爆炸；(风、暴风雨等)发作；发怒；充气；放大(照片)"
+                    source: mdict
+                    cached: false
+                    confidence_score: 0.90
+                    timestamp: 1730736100
+                argos_sentence:
+                  summary: Argos translation (sentence)
+                  value:
+                    success: true
+                    translation: "时间不多了让我们行动起来。"
+                    source: argos
+                    cached: false
+                    confidence_score: 0.75
+                    timestamp: 1730736200
+                cached_result:
+                  summary: Cached translation
+                  value:
+                    success: true
+                    translation: "a. 精密的, 复杂的, 久经世故的, 老练的"
+                    source: cached
+                    cached: true
+                    confidence_score: 0.95
+                    timestamp: 1730735000
+                    access_count: 5
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                empty_text:
+                  summary: Empty source text
+                  value:
+                    success: false
+                    error: "source_text cannot be empty"
+                    error_cn: "源文本不能为空"
+                    code: EMPTY_TEXT
+                text_too_long:
+                  summary: Text exceeds length limit
+                  value:
+                    success: false
+                    error: "source_text exceeds 500 characters"
+                    error_cn: "源文本超过 500 字符"
+                    code: TEXT_TOO_LONG
+                invalid_type:
+                  summary: Invalid translation type
+                  value:
+                    success: false
+                    error: "translation_type must be one of: word, phrase, sentence"
+                    error_cn: "翻译类型必须是以下之一: word, phrase, sentence"
+                    code: INVALID_TYPE
+        '500':
+          description: Translation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                general_error:
+                  summary: General translation failure
+                  value:
+                    success: false
+                    error: "Translation failed"
+                    error_cn: "翻译失败"
+                    code: TRANSLATION_FAILED
+        '503':
+          description: Translation model not loaded or unavailable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                model_not_loaded:
+                  summary: Argos model not installed
+                  value:
+                    success: false
+                    error: "Translation model not installed"
+                    error_cn: "翻译模型未安装"
+                    code: MODEL_NOT_INSTALLED
+                    details:
+                      message: "Run 'python scripts/setup_translation.py' to install"
+
+  /api/cefr/{level}:
+    get:
+      tags:
+        - CEFR
+      summary: Get CEFR level description by level code
+      description: |
+        Retrieve bilingual description for a specific CEFR level.
+
+        **Use Cases:**
+        - Display CEFR modal when user clicks level badge
+        - Show detailed proficiency information
+        - Provide educational context for vocabulary difficulty
+
+        **Performance:** <100ms (data loaded at startup)
+      operationId: getCEFRLevel
+      parameters:
+        - name: level
+          in: path
+          required: true
+          description: CEFR level code
+          schema:
+            type: string
+            enum: [A1, A2, B1, B2, C1, C2, C2+]
+          example: B2
+      responses:
+        '200':
+          description: CEFR level definition
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=3600
+              description: CEFR definitions are static and cacheable
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CEFRDefinition'
+              examples:
+                b2_level:
+                  summary: B2 (Upper Intermediate)
+                  value:
+                    level_code: B2
+                    name_en: Upper Intermediate
+                    name_cn: 中高级
+                    short_description_en: Can interact with fluency and spontaneity
+                    short_description_cn: 能够流畅自发地互动
+                    description_en: "Can understand the main ideas of complex text on both concrete and abstract topics, including technical discussions in their field of specialization. Can interact with a degree of fluency and spontaneity that makes regular interaction with native speakers quite possible without strain for either party."
+                    description_cn: "能够理解具体和抽象主题的复杂文本的主要思想，包括其专业领域的技术讨论。能够以一定程度的流利和自发性进行互动，使与母语者的常规互动在双方都没有压力的情况下成为可能。"
+                    vocabulary_size: "3000-5000"
+                    example_words:
+                      - sophisticated
+                      - analyze
+                      - circumstances
+                      - nevertheless
+                      - furthermore
+                    learning_context_en: "Typical learner: University student, professional, 3-5 years of study"
+                    learning_context_cn: "典型学习者：大学生、专业人士、学习3-5年"
+        '404':
+          description: CEFR level not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalid_level:
+                  summary: Invalid level code
+                  value:
+                    success: false
+                    error: "CEFR level not found"
+                    error_cn: "未找到 CEFR 级别"
+                    code: LEVEL_NOT_FOUND
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/cefr:
+    get:
+      tags:
+        - CEFR
+      summary: Get all CEFR level descriptions
+      description: |
+        Retrieve bilingual descriptions for all 7 CEFR levels (A1-C2+).
+
+        **Use Cases:**
+        - Load all CEFR data at application startup
+        - Display CEFR reference guide
+        - Build level selection UI
+
+        **Performance:** <200ms (7 levels, static data)
+      operationId: getAllCEFRLevels
+      responses:
+        '200':
+          description: Array of all CEFR level definitions
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=3600
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: "1.0"
+                  last_updated:
+                    type: string
+                    format: date
+                    example: "2025-11-04"
+                  levels:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/CEFRDefinition'
+              examples:
+                all_levels:
+                  summary: All 7 CEFR levels
+                  value:
+                    version: "1.0"
+                    last_updated: "2025-11-04"
+                    levels:
+                      A1:
+                        level_code: A1
+                        name_en: Beginner
+                        name_cn: 初级
+                        short_description_en: Can understand and use familiar everyday expressions
+                        short_description_cn: 能够理解和使用熟悉的日常表达
+                        description_en: "Can understand and use familiar everyday expressions..."
+                        description_cn: "能够理解和使用旨在满足具体需求的熟悉的日常表达..."
+                        vocabulary_size: "500-1000"
+                        example_words: ["hello", "thank", "yes", "no", "please"]
+                        learning_context_en: "Typical learner: Absolute beginner, 0-6 months"
+                        learning_context_cn: "典型学习者：绝对初学者、学习0-6个月"
+                      B2:
+                        level_code: B2
+                        name_en: Upper Intermediate
+                        name_cn: 中高级
+                        short_description_en: Can interact with fluency and spontaneity
+                        short_description_cn: 能够流畅自发地互动
+                        description_en: "Can understand the main ideas of complex text..."
+                        description_cn: "能够理解具体和抽象主题的复杂文本..."
+                        vocabulary_size: "3000-5000"
+                        example_words: ["sophisticated", "analyze", "circumstances"]
+                        learning_context_en: "Typical learner: University student, 3-5 years"
+                        learning_context_cn: "典型学习者：大学生、学习3-5年"
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/ui/strings:
+    get:
+      tags:
+        - UI Strings
+      summary: Get all bilingual UI strings
+      description: |
+        Retrieve bilingual UI localization strings for rendering interface elements.
+
+        **Use Cases:**
+        - Load UI strings at application startup
+        - Filter strings by category for specific pages
+        - Dynamic content generation
+
+        **Performance:** <50ms (cached in memory)
+      operationId: getUIStrings
+      parameters:
+        - name: category
+          in: query
+          required: false
+          description: Filter by category (navigation, buttons, labels, errors, loading)
+          schema:
+            type: string
+            enum: [navigation, buttons, labels, errors, loading]
+          example: navigation
+      responses:
+        '200':
+          description: Object mapping keys to bilingual strings
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+            Cache-Control:
+              schema:
+                type: string
+                example: public, max-age=3600
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  version:
+                    type: string
+                    example: "1.0"
+                  category:
+                    type: string
+                    example: "all"
+                    description: "Requested category or 'all'"
+                  strings:
+                    type: object
+                    additionalProperties:
+                      $ref: '#/components/schemas/BilingualString'
+              examples:
+                all_strings:
+                  summary: All UI strings
+                  value:
+                    version: "1.0"
+                    category: all
+                    strings:
+                      navigation.home:
+                        key: navigation.home
+                        text_en: Home
+                        text_cn: 首页
+                        context: Main navigation menu
+                        category: navigation
+                      buttons.analyze:
+                        key: buttons.analyze
+                        text_en: Analyze
+                        text_cn: 分析
+                        context: Upload form submit button
+                        category: buttons
+                      errors.file_too_large:
+                        key: errors.file_too_large
+                        text_en: File size exceeds 10MB limit
+                        text_cn: 文件大小超过 10MB 限制
+                        context: File upload validation error
+                        category: errors
+                navigation_only:
+                  summary: Navigation strings only
+                  value:
+                    version: "1.0"
+                    category: navigation
+                    strings:
+                      navigation.home:
+                        key: navigation.home
+                        text_en: Home
+                        text_cn: 首页
+                        context: Main navigation menu
+                        category: navigation
+                      navigation.upload:
+                        key: navigation.upload
+                        text_en: Upload
+                        text_cn: 上传
+                        context: Main navigation menu
+                        category: navigation
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/dictionaries:
+    get:
+      tags:
+        - Dictionaries
+      summary: List available Mdict dictionaries
+      description: |
+        List all discovered Mdict (.mdx) dictionaries and their availability status.
+
+        **Use Cases:**
+        - Display available dictionaries to user
+        - Diagnostic information for troubleshooting
+        - Dictionary selection in settings
+
+        **Performance:** <100ms
+
+        **Note:** Dictionaries are user-provided files in `data/dictionaries/`.
+        The application auto-discovers .mdx files at startup.
+      operationId: listDictionaries
+      responses:
+        '200':
+          description: Array of dictionary references
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  dictionaries:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/MdictDictionary'
+                  total_count:
+                    type: integer
+                    description: Total number of dictionaries found
+                    example: 3
+                  available_count:
+                    type: integer
+                    description: Number of successfully loaded dictionaries
+                    example: 2
+              examples:
+                with_dictionaries:
+                  summary: Multiple dictionaries available
+                  value:
+                    dictionaries:
+                      - dictionary_name: OALD9
+                        file_path: /data/dictionaries/OALD9.mdx
+                        priority: 1
+                        is_available: true
+                        last_checked: 1730736000
+                        index_path: /data/dictionaries/OALD9.mdx.db
+                        entry_count: 100000
+                      - dictionary_name: LDOCE6
+                        file_path: /data/dictionaries/LDOCE6.mdx
+                        priority: 2
+                        is_available: true
+                        last_checked: 1730736000
+                        index_path: /data/dictionaries/LDOCE6.mdx.db
+                        entry_count: 230000
+                      - dictionary_name: Collins
+                        file_path: /data/dictionaries/Collins.mdx
+                        priority: 3
+                        is_available: false
+                        last_checked: 1730736000
+                        load_error: "File corrupted: Invalid MDX header"
+                    total_count: 3
+                    available_count: 2
+                no_dictionaries:
+                  summary: No dictionaries found
+                  value:
+                    dictionaries: []
+                    total_count: 0
+                    available_count: 0
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/translation/cache/stats:
+    get:
+      tags:
+        - Cache
+      summary: Get translation cache statistics
+      description: |
+        Retrieve statistics about the translation cache for debugging and administration.
+
+        **Use Cases:**
+        - Monitor cache performance
+        - Debug translation issues
+        - Display cache info in settings/about page
+
+        **Performance:** <50ms
+
+        **Note:** This endpoint is primarily for debugging/admin purposes.
+      operationId: getCacheStats
+      responses:
+        '200':
+          description: Cache statistics
+          headers:
+            Content-Type:
+              schema:
+                type: string
+                example: application/json
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CacheStats'
+              examples:
+                cache_stats:
+                  summary: Cache statistics
+                  value:
+                    total_entries: 150
+                    entries_by_type:
+                      word: 120
+                      phrase: 25
+                      sentence: 5
+                    entries_by_source:
+                      ecdict: 95
+                      mdict: 30
+                      argos: 20
+                      cached: 5
+                    cache_size_bytes: 52480
+                    oldest_entry_timestamp: 1730700000
+                    newest_entry_timestamp: 1730736000
+                    most_accessed_entries:
+                      - source_text: example
+                        access_count: 15
+                        translation_type: word
+                      - source_text: run out
+                        access_count: 8
+                        translation_type: phrase
+                      - source_text: sophisticated
+                        access_count: 5
+                        translation_type: word
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    TranslationRequest:
+      type: object
+      required:
+        - source_text
+        - translation_type
+      properties:
+        source_text:
+          type: string
+          description: English text to translate
+          minLength: 1
+          maxLength: 500
+          example: sophisticated
+        translation_type:
+          type: string
+          description: Type of content to translate
+          enum: [word, phrase, sentence]
+          example: word
+        user_context:
+          type: string
+          description: Optional context hint for translation
+          maxLength: 200
+          example: from vocabulary analysis results
+
+    TranslationResponse:
+      type: object
+      required:
+        - success
+        - translation
+        - source
+        - cached
+        - confidence_score
+        - timestamp
+      properties:
+        success:
+          type: boolean
+          description: Whether translation was successful
+          example: true
+        translation:
+          type: string
+          description: Chinese translation result
+          example: "a. 精密的, 复杂的, 久经世故的, 老练的"
+        source:
+          type: string
+          description: Translation source
+          enum: [ecdict, mdict, argos, cached]
+          example: ecdict
+        cached:
+          type: boolean
+          description: Whether result came from cache
+          example: false
+        confidence_score:
+          type: number
+          format: float
+          description: Translation quality estimate (0.0-1.0)
+          minimum: 0.0
+          maximum: 1.0
+          example: 0.95
+        timestamp:
+          type: integer
+          format: int64
+          description: Unix timestamp of translation
+          example: 1730736000
+        access_count:
+          type: integer
+          description: Number of times this translation has been accessed (only for cached results)
+          minimum: 1
+          example: 5
+        details:
+          type: object
+          description: Additional translation details (optional)
+          properties:
+            html:
+              type: string
+              description: HTML definition from Mdict (if source is mdict)
+            examples:
+              type: array
+              items:
+                type: string
+              description: Example sentences from dictionary
+            word_info:
+              type: object
+              description: Additional word information from ECDICT
+
+    CEFRDefinition:
+      type: object
+      required:
+        - level_code
+        - name_en
+        - name_cn
+        - short_description_en
+        - short_description_cn
+        - description_en
+        - description_cn
+        - vocabulary_size
+        - example_words
+      properties:
+        level_code:
+          type: string
+          description: CEFR level identifier
+          enum: [A1, A2, B1, B2, C1, C2, C2+]
+          example: B2
+        name_en:
+          type: string
+          description: English level name
+          maxLength: 50
+          example: Upper Intermediate
+        name_cn:
+          type: string
+          description: Chinese level name
+          maxLength: 50
+          example: 中高级
+        short_description_en:
+          type: string
+          description: Brief English summary (for tooltips)
+          maxLength: 200
+          example: Can interact with fluency and spontaneity
+        short_description_cn:
+          type: string
+          description: Brief Chinese summary (for tooltips)
+          maxLength: 200
+          example: 能够流畅自发地互动
+        description_en:
+          type: string
+          description: Full English description
+          maxLength: 1000
+          example: "Can understand the main ideas of complex text on both concrete and abstract topics..."
+        description_cn:
+          type: string
+          description: Full Chinese description
+          maxLength: 1000
+          example: "能够理解具体和抽象主题的复杂文本的主要思想..."
+        vocabulary_size:
+          type: string
+          description: Typical vocabulary range
+          pattern: '^\d+[-+]?\d*$'
+          example: "3000-5000"
+        example_words:
+          type: array
+          description: Representative words at this level
+          minItems: 3
+          maxItems: 6
+          items:
+            type: string
+          example: ["sophisticated", "analyze", "circumstances", "nevertheless", "furthermore"]
+        learning_context_en:
+          type: string
+          description: Typical learner profile (English)
+          maxLength: 500
+          example: "Typical learner: University student, professional, 3-5 years of study"
+        learning_context_cn:
+          type: string
+          description: Typical learner profile (Chinese)
+          maxLength: 500
+          example: "典型学习者：大学生、专业人士、学习3-5年"
+
+    BilingualString:
+      type: object
+      required:
+        - key
+        - text_en
+        - text_cn
+      properties:
+        key:
+          type: string
+          description: Unique identifier (snake_case)
+          maxLength: 100
+          pattern: '^[a-z0-9_.]+$'
+          example: navigation.home
+        text_en:
+          type: string
+          description: English text
+          maxLength: 500
+          example: Home
+        text_cn:
+          type: string
+          description: Chinese text
+          maxLength: 500
+          example: 首页
+        context:
+          type: string
+          description: Usage context (optional)
+          maxLength: 200
+          example: Main navigation menu
+        category:
+          type: string
+          description: Grouping category (optional)
+          maxLength: 50
+          example: navigation
+
+    MdictDictionary:
+      type: object
+      required:
+        - dictionary_name
+        - file_path
+        - priority
+        - is_available
+        - last_checked
+      properties:
+        dictionary_name:
+          type: string
+          description: Display name (derived from filename)
+          example: OALD9
+        file_path:
+          type: string
+          description: Path to .mdx file
+          example: /data/dictionaries/OALD9.mdx
+        priority:
+          type: integer
+          description: Lookup order (lower = higher priority)
+          minimum: 1
+          maximum: 10
+          example: 1
+        is_available:
+          type: boolean
+          description: Successfully loaded
+          example: true
+        last_checked:
+          type: integer
+          format: int64
+          description: Last availability check (Unix timestamp)
+          example: 1730736000
+        index_path:
+          type: string
+          description: SQLite index file path (optional)
+          example: /data/dictionaries/OALD9.mdx.db
+        entry_count:
+          type: integer
+          description: Total entries (set after indexing)
+          minimum: 0
+          example: 100000
+        load_error:
+          type: string
+          description: Error message if failed to load
+          maxLength: 500
+          example: "File corrupted: Invalid MDX header"
+
+    CacheStats:
+      type: object
+      required:
+        - total_entries
+        - entries_by_type
+        - entries_by_source
+        - cache_size_bytes
+      properties:
+        total_entries:
+          type: integer
+          description: Total number of cached translations
+          minimum: 0
+          example: 150
+        entries_by_type:
+          type: object
+          description: Breakdown by translation type
+          properties:
+            word:
+              type: integer
+              example: 120
+            phrase:
+              type: integer
+              example: 25
+            sentence:
+              type: integer
+              example: 5
+        entries_by_source:
+          type: object
+          description: Breakdown by translation source
+          properties:
+            ecdict:
+              type: integer
+              example: 95
+            mdict:
+              type: integer
+              example: 30
+            argos:
+              type: integer
+              example: 20
+            cached:
+              type: integer
+              example: 5
+        cache_size_bytes:
+          type: integer
+          description: Approximate cache size in bytes
+          minimum: 0
+          example: 52480
+        oldest_entry_timestamp:
+          type: integer
+          format: int64
+          description: Timestamp of oldest cache entry
+          example: 1730700000
+        newest_entry_timestamp:
+          type: integer
+          format: int64
+          description: Timestamp of newest cache entry
+          example: 1730736000
+        most_accessed_entries:
+          type: array
+          description: Top 5 most frequently accessed translations
+          maxItems: 5
+          items:
+            type: object
+            properties:
+              source_text:
+                type: string
+                example: example
+              access_count:
+                type: integer
+                example: 15
+              translation_type:
+                type: string
+                example: word
+
+    ErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - error_cn
+        - code
+      properties:
+        success:
+          type: boolean
+          description: Always false for errors
+          example: false
+        error:
+          type: string
+          description: Error message in English
+          example: "source_text cannot be empty"
+        error_cn:
+          type: string
+          description: Error message in Chinese
+          example: "源文本不能为空"
+        code:
+          type: string
+          description: Machine-readable error code
+          example: EMPTY_TEXT
+        details:
+          type: object
+          description: Additional error details (optional)
+          properties:
+            message:
+              type: string
+              description: Detailed error information
+            field:
+              type: string
+              description: Field that caused the error
+
+  securitySchemes:
+    # Future: Add API key or session-based auth if needed
+    {}
+
+security: []
+
+externalDocs:
+  description: Feature Specification
+  url: ../spec.md

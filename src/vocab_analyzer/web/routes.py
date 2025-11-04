@@ -364,3 +364,172 @@ def download_result(session_id: str, format: str):
             "error": "EXPORT_ERROR",
             "message": f"Error exporting results: {str(e)}"
         }), 500
+
+
+@web_bp.route('/api/ui/strings', methods=['GET'])
+def get_ui_strings():
+    """Get bilingual UI strings.
+
+    Query Parameters:
+        category: Optional filter by category (navigation, buttons, labels, errors, loading)
+
+    Returns:
+        JSON response with bilingual UI strings
+    """
+    try:
+        from ..translation.strings import UIStringsLoader
+
+        loader = UIStringsLoader()
+        category = request.args.get('category')
+
+        if category:
+            strings = loader.get_strings_by_category(category)
+        else:
+            strings = loader.get_all_strings()
+
+        return jsonify({
+            "version": "1.0",
+            "category": category if category else "all",
+            "strings": strings
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading UI strings: {e}")
+        return jsonify({
+            "error": "STRINGS_LOAD_ERROR",
+            "message": "Failed to load UI strings"
+        }), 500
+
+
+@web_bp.route('/api/cefr', methods=['GET'])
+def get_all_cefr_levels():
+    """Get all CEFR level descriptions.
+
+    Returns:
+        JSON response with all CEFR level definitions
+    """
+    try:
+        from ..translation.config import CEFRDefinitionLoader
+
+        loader = CEFRDefinitionLoader()
+        cefr_data = loader.get_all_levels()
+
+        return jsonify(cefr_data), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading CEFR definitions: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to load CEFR definitions",
+            "error_cn": "无法加载 CEFR 定义",
+            "code": "CEFR_LOAD_ERROR"
+        }), 500
+
+
+@web_bp.route('/api/cefr/<level>', methods=['GET'])
+def get_cefr_level(level: str):
+    """Get CEFR level description by level code.
+
+    Args:
+        level: CEFR level code (A1, A2, B1, B2, C1, C2, C2+)
+
+    Returns:
+        JSON response with CEFR level definition or error
+    """
+    try:
+        from ..translation.config import CEFRDefinitionLoader
+
+        loader = CEFRDefinitionLoader()
+        level_data = loader.get_level(level.upper())
+
+        if not level_data:
+            return jsonify({
+                "success": False,
+                "error": "CEFR level not found",
+                "error_cn": "未找到 CEFR 级别",
+                "code": "LEVEL_NOT_FOUND"
+            }), 404
+
+        return jsonify(level_data), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error loading CEFR level {level}: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to load CEFR level",
+            "error_cn": "无法加载 CEFR 级别",
+            "code": "CEFR_LOAD_ERROR"
+        }), 500
+
+
+@web_bp.route('/api/translate', methods=['POST'])
+def translate_text():
+    """Translate English text to Chinese using fallback chain.
+
+    Request Body:
+        source_text: English text to translate (required)
+        translation_type: Type of content (word, phrase, sentence) (required)
+        user_context: Optional context hint
+
+    Returns:
+        JSON response with translation or error
+    """
+    try:
+        # Get request data
+        data = request.get_json()
+
+        if not data:
+            return jsonify({
+                "success": False,
+                "error": "No JSON data provided",
+                "error_cn": "未提供 JSON 数据",
+                "code": "NO_DATA"
+            }), 400
+
+        source_text = data.get('source_text', '').strip()
+        translation_type = data.get('translation_type', 'word')
+
+        # Validate required fields
+        if not source_text:
+            return jsonify({
+                "success": False,
+                "error": "source_text cannot be empty",
+                "error_cn": "源文本不能为空",
+                "code": "EMPTY_TEXT"
+            }), 400
+
+        if len(source_text) > 500:
+            return jsonify({
+                "success": False,
+                "error": "source_text exceeds 500 characters",
+                "error_cn": "源文本超过 500 字符",
+                "code": "TEXT_TOO_LONG"
+            }), 400
+
+        if translation_type not in ['word', 'phrase', 'sentence']:
+            return jsonify({
+                "success": False,
+                "error": "translation_type must be one of: word, phrase, sentence",
+                "error_cn": "翻译类型必须是以下之一: word, phrase, sentence",
+                "code": "INVALID_TYPE"
+            }), 400
+
+        # Perform translation
+        from ..translation.translator import TranslationService
+
+        translator = TranslationService()
+        result = translator.translate(
+            source_text=source_text,
+            translation_type=translation_type
+        )
+
+        return jsonify(result), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Translation error: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Translation failed",
+            "error_cn": "翻译失败",
+            "code": "TRANSLATION_FAILED"
+        }), 500

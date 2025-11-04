@@ -1,0 +1,98 @@
+{
+  "version": "1.0",
+  "last_updated": "2025-11-04",
+  "source": "Council of Europe CEFR + vocabulary context adaptation",
+  "levels": {
+    "A1": {
+      "level_code": "A1",
+      "name_en": "Beginner",
+      "name_cn": "初级",
+      "short_description_en": "Can understand and use familiar everyday expressions",
+      "short_description_cn": "能够理解和使用熟悉的日常表达",
+      "description_en": "Can understand and use familiar everyday expressions and very basic phrases aimed at the satisfaction of needs of a concrete type. Can introduce themselves and others and can ask and answer questions about personal details such as where they live, people they know and things they have.",
+      "description_cn": "能够理解和使用熟悉的日常表达和非常基本的短语，旨在满足具体需求。能够介绍自己和他人，能够询问和回答有关个人详细信息的问题，例如他们住在哪里、认识的人和拥有的东西。",
+      "vocabulary_size": "500-1000",
+      "example_words": ["hello", "thank", "yes", "no", "please", "help"],
+      "learning_context_en": "Typical learner: Absolute beginner, 0-6 months of study",
+      "learning_context_cn": "典型学习者：绝对初学者、学习0-6个月"
+    },
+    "A2": {
+      "level_code": "A2",
+      "name_en": "Elementary",
+      "name_cn": "基础级",
+      "short_description_en": "Can communicate in simple routine tasks",
+      "short_description_cn": "能够在简单的日常任务中沟通",
+      "description_en": "Can understand sentences and frequently used expressions related to areas of most immediate relevance (e.g. very basic personal and family information, shopping, local geography, employment). Can communicate in simple and routine tasks requiring a simple and direct exchange of information on familiar and routine matters.",
+      "description_cn": "能够理解与最直接相关领域相关的句子和常用表达（例如非常基本的个人和家庭信息、购物、当地地理、就业）。能够在需要就熟悉和常规事项进行简单直接信息交流的简单和常规任务中进行沟通。",
+      "vocabulary_size": "1000-2000",
+      "example_words": ["weather", "family", "shopping", "restaurant", "appointment"],
+      "learning_context_en": "Typical learner: Can handle basic conversations, 6-12 months",
+      "learning_context_cn": "典型学习者：能够处理基本对话、学习6-12个月"
+    },
+    "B1": {
+      "level_code": "B1",
+      "name_en": "Intermediate",
+      "name_cn": "中级",
+      "short_description_en": "Can handle most situations while traveling",
+      "short_description_cn": "能够处理旅行时的大多数情况",
+      "description_en": "Can understand the main points of clear standard input on familiar matters regularly encountered in work, school, leisure, etc. Can deal with most situations likely to arise while traveling in an area where the language is spoken. Can produce simple connected text on topics that are familiar or of personal interest. Can describe experiences and events, dreams, hopes, and ambitions.",
+      "description_cn": "能够理解在工作、学校、休闲等常规遇到的熟悉事项的清晰标准输入的要点。能够处理在使用该语言的地区旅行时可能出现的大多数情况。能够就熟悉或个人感兴趣的主题撰写简单的连贯文本。能够描述经历和事件、梦想、希望和抱负。",
+      "vocabulary_size": "2000-3000",
+      "example_words": ["environment", "opportunity", "development", "relationship"],
+      "learning_context_en": "Typical learner: Can communicate independently, 1-3 years",
+      "learning_context_cn": "典型学习者：能够独立沟通、学习1-3年"
+    },
+    "B2": {
+      "level_code": "B2",
+      "name_en": "Upper Intermediate",
+      "name_cn": "中高级",
+      "short_description_en": "Can interact with fluency and spontaneity",
+      "short_description_cn": "能够流畅自发地互动",
+      "description_en": "Can understand the main ideas of complex text on both concrete and abstract topics, including technical discussions in their field of specialization. Can interact with a degree of fluency and spontaneity that makes regular interaction with native speakers quite possible without strain for either party. Can produce clear, detailed text on a wide range of subjects.",
+      "description_cn": "能够理解具体和抽象主题的复杂文本的主要思想，包括其专业领域的技术讨论。能够以一定程度的流利和自发性进行互动，使与母语者的常规互动在双方都没有压力的情况下成为可能。能够就广泛的主题撰写清晰、详细的文本。",
+      "vocabulary_size": "3000-5000",
+      "example_words": ["sophisticated", "analyze", "circumstances", "nevertheless"],
+      "learning_context_en": "Typical learner: University student, 3-5 years",
+      "learning_context_cn": "典型学习者：大学生、学习3-5年"
+    },
+    "C1": {
+      "level_code": "C1",
+      "name_en": "Advanced",
+      "name_cn": "高级",
+      "short_description_en": "Can use language flexibly and effectively",
+      "short_description_cn": "能够灵活有效地使用语言",
+      "description_en": "Can understand a wide range of demanding, longer texts, and recognize implicit meaning. Can express ideas fluently and spontaneously without much obvious searching for expressions. Can use language flexibly and effectively for social, academic, and professional purposes. Can produce clear, well-structured, detailed text on complex subjects.",
+      "description_cn": "能够理解广泛的要求较高的长文本，并识别隐含意义。能够流畅自发地表达想法，而无需明显寻找表达方式。能够在社交、学术和专业目的中灵活有效地使用语言。能够就复杂主题撰写清晰、结构良好、详细的文本。",
+      "vocabulary_size": "5000-8000",
+      "example_words": ["predominantly", "paradigm", "intricate", "eloquent"],
+      "learning_context_en": "Typical learner: Graduate student, 5-8 years",
+      "learning_context_cn": "典型学习者：研究生、学习5-8年"
+    },
+    "C2": {
+      "level_code": "C2",
+      "name_en": "Proficient",
+      "name_cn": "精通级",
+      "short_description_en": "Can understand virtually everything with ease",
+      "short_description_cn": "能够轻松理解几乎所有内容",
+      "description_en": "Can understand with ease virtually everything heard or read. Can summarize information from different spoken and written sources, reconstructing arguments and accounts in a coherent presentation. Can express themselves spontaneously, very fluently and precisely, differentiating finer shades of meaning even in the most complex situations.",
+      "description_cn": "能够轻松理解几乎所有听到或读到的内容。能够总结来自不同口头和书面来源的信息，在连贯的演示中重建论点和叙述。能够自发、非常流利和准确地表达自己，即使在最复杂的情况下也能区分更细微的含义差异。",
+      "vocabulary_size": "8000-10000+",
+      "example_words": ["ubiquitous", "quintessential", "juxtaposition", "hitherto"],
+      "learning_context_en": "Typical learner: Near-native, 8+ years",
+      "learning_context_cn": "典型学习者：接近母语者、学习8年以上"
+    },
+    "C2+": {
+      "level_code": "C2+",
+      "name_en": "Beyond CEFR",
+      "name_cn": "超出CEFR范围",
+      "short_description_en": "Specialized or archaic vocabulary",
+      "short_description_cn": "专业或古老词汇",
+      "description_en": "Highly specialized technical terms, archaic vocabulary, or extremely rare words beyond standard proficiency levels. This includes academic jargon, historical terms, and vocabulary from specialized domains.",
+      "description_cn": "高度专业化的技术术语、古老词汇或超出标准熟练度水平的极其罕见的词汇。这包括学术行话、历史术语和来自专业领域的词汇。",
+      "vocabulary_size": "10000+",
+      "example_words": ["sesquipedalian", "antediluvian", "perspicacious"],
+      "learning_context_en": "Academic literature, historical texts",
+      "learning_context_cn": "学术文献、历史文本"
+    }
+  }
+}

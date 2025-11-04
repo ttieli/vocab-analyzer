@@ -25,6 +25,28 @@ A powerful CLI tool that analyzes English books and generates vocabulary lists o
 - **High Performance**: Process 100-page books in under 60 seconds
 - **Beautiful CLI**: Rich terminal interface with progress bars and colored output
 
+### 🚧 In Development: Bilingual UI & Translation (Feature 002)
+
+**Status**: Phase 2 Complete - Foundation Ready (28% overall)
+
+New translation capabilities being added:
+- **Bilingual Interface**: Simultaneous English/Chinese UI display
+- **Offline Translation**: Three-tier translation (ECDICT → Mdict → Argos Translate)
+- **CEFR Education**: Interactive level descriptions and learning guidance
+- **Translation Caching**: Persistent cache for improved performance
+- **Configurable**: YAML-based configuration for all translation settings
+
+**Completed Infrastructure** (✅ Ready for integration):
+- Translation cache with 30-day expiration
+- Argos Translate integration with lazy loading
+- Mdict dictionary support (.mdx files)
+- Translation fallback chain with confidence scoring
+- Bilingual string loader for UI localization
+
+**Next Milestone**: Web UI integration (Phase 3)
+
+📝 See [Feature 002 Progress](./specs/002-bilingual-ui-translation/PROGRESS.md) for details
+
 ### 📦 Installation
 
 #### Prerequisites

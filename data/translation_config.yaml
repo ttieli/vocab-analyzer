@@ -1,0 +1,80 @@
+# Translation Configuration
+# Feature: Bilingual UI with Local Translation
+# Version: 1.0.0
+
+# Cache Settings
+cache:
+  enabled: true
+  file_path: "data/translation_cache.json"
+  expiry_days: 30  # Remove entries older than 30 days
+  auto_save_interval: 300  # Auto-save every 5 minutes (seconds)
+  max_entries: 10000  # Maximum cache entries before cleanup
+
+# ECDICT Settings
+ecdict:
+  enabled: true
+  vocabulary_file: "data/dictionaries/ECDICT/ecdict.csv"
+  confidence_score: 0.95  # Confidence for ECDICT translations
+
+# Mdict Dictionary Settings
+mdict:
+  enabled: true
+  dictionaries_dir: "data/dictionaries"
+  confidence_score: 0.90  # Confidence for Mdict translations
+
+  # Dictionary priorities (lower number = higher priority)
+  priorities:
+    oald: 1      # Oxford Advanced Learner's Dictionary
+    ldoce: 2     # Longman Dictionary of Contemporary English
+    collins: 3   # Collins COBUILD
+    default: 5   # Default priority for unknown dictionaries
+
+# Argos Translate Settings
+argos:
+  enabled: true
+  model_dir: "data/translation_models"
+  source_lang: "en"  # English
+  target_lang: "zh"  # Chinese
+
+  # Confidence scores by type
+  confidence:
+    word: 0.75       # Single words (base 0.70 + 0.05 boost)
+    phrase: 0.70     # Phrases (base confidence)
+    sentence: 0.70   # Sentences (base confidence)
+    long_sentence: 0.60  # 20+ words (reduced confidence)
+
+  # Performance limits
+  max_text_length: 500  # Maximum characters per translation
+  long_sentence_threshold: 20  # Word count for confidence penalty
+
+# Translation Chain Settings
+chain:
+  # Fallback order: ecdict → mdict → argos
+  timeout_ms:
+    ecdict: 10      # ECDICT timeout (milliseconds)
+    mdict: 50       # Mdict timeout (milliseconds)
+    argos: 5000     # Argos Translate timeout (milliseconds)
+
+  # Retry settings
+  max_retries: 0  # No retries by default (fail fast)
+  retry_delay_ms: 0
+
+# Logging Settings
+logging:
+  enabled: true
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  log_translations: false  # Log each translation request (verbose)
+  log_cache_hits: false    # Log cache hits (verbose)
+
+# Performance Settings
+performance:
+  lazy_loading: true  # Load models/dictionaries on first use
+  preload_ecdict: true  # Pre-load ECDICT at startup
+  preload_mdict: false  # Don't pre-load Mdict (lazy)
+  preload_argos: false  # Don't pre-load Argos (lazy)
+
+# Feature Flags
+features:
+  auto_detect_type: true  # Auto-infer translation type from text
+  cache_negative_results: false  # Don't cache failed translations
+  parallel_lookup: false  # Query tiers sequentially (not parallel)
