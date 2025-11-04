@@ -377,9 +377,9 @@ def get_ui_strings():
         JSON response with bilingual UI strings
     """
     try:
-        from ..translation.strings import UIStringsLoader
+        from ..translation.strings import BilingualStringLoader
 
-        loader = UIStringsLoader()
+        loader = BilingualStringLoader()
         category = request.args.get('category')
 
         if category:
@@ -515,15 +515,35 @@ def translate_text():
             }), 400
 
         # Perform translation
-        from ..translation.translator import TranslationService
+        from ..translation.fallback import TranslationChain
 
-        translator = TranslationService()
-        result = translator.translate(
-            source_text=source_text,
+        chain = TranslationChain()
+        result = chain.translate(
+            text=source_text,
             translation_type=translation_type
         )
 
-        return jsonify(result), 200
+        # Check if translation was successful
+        if not result.is_success():
+            return jsonify({
+                "success": False,
+                "error": result.error or "Translation failed",
+                "error_cn": "翻译失败",
+                "code": "TRANSLATION_FAILED"
+            }), 500
+
+        # Convert TranslationResult to dict for JSON response
+        import time
+        response = {
+            "success": True,
+            "translation": result.target_text,
+            "source": result.source,
+            "cached": result.source == "cached",
+            "confidence_score": result.confidence_score,
+            "timestamp": int(time.time())
+        }
+
+        return jsonify(response), 200
 
     except Exception as e:
         current_app.logger.error(f"Translation error: {e}")
