@@ -381,3 +381,72 @@ def reload_config(config_file: Optional[Path | str] = None) -> TranslationConfig
     global _config_instance
     _config_instance = TranslationConfig(config_file)
     return _config_instance
+
+
+class CEFRDefinitionLoader:
+    """
+    Loader for CEFR level definitions.
+
+    Loads bilingual CEFR level descriptions from JSON file.
+    """
+
+    def __init__(self, definitions_file: Optional[Path | str] = None):
+        """
+        Initialize CEFR definition loader.
+
+        Args:
+            definitions_file: Path to CEFR definitions JSON file
+        """
+        if definitions_file is None:
+            # Default to data/cefr_definitions.json relative to project root
+            definitions_file = Path(__file__).parent.parent.parent.parent / "data" / "cefr_definitions.json"
+
+        self.definitions_file = Path(definitions_file)
+        self._definitions = None
+        self._load()
+
+    def _load(self):
+        """Load CEFR definitions from JSON file."""
+        import json
+
+        try:
+            with open(self.definitions_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                self._definitions = data
+                logger.info(f"Loaded {len(data.get('levels', {}))} CEFR level definitions from {self.definitions_file}")
+        except Exception as e:
+            logger.error(f"Failed to load CEFR definitions from {self.definitions_file}: {e}")
+            self._definitions = {"version": "1.0", "levels": {}}
+
+    def get_all_levels(self) -> Dict[str, Any]:
+        """
+        Get all CEFR level definitions.
+
+        Returns:
+            Dictionary with version, last_updated, and levels
+        """
+        return self._definitions
+
+    def get_level(self, level_code: str) -> Optional[Dict[str, Any]]:
+        """
+        Get definition for a specific CEFR level.
+
+        Args:
+            level_code: CEFR level code (e.g., 'A1', 'B2', 'C2+')
+
+        Returns:
+            Level definition dict or None if not found
+        """
+        levels = self._definitions.get("levels", {})
+        return levels.get(level_code.upper())
+
+    def validate_all(self) -> bool:
+        """
+        Validate that all required CEFR levels are present.
+
+        Returns:
+            True if all 7 levels (A1-C2+) are defined
+        """
+        required_levels = ["A1", "A2", "B1", "B2", "C1", "C2", "C2+"]
+        levels = self._definitions.get("levels", {})
+        return all(level in levels for level in required_levels)
