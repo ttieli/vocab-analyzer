@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vocabulary Analyzer - Web Interface</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📚 Vocabulary Analyzer</h1>
+            <p class="subtitle">Analyze English book vocabulary by CEFR levels</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div id="upload-section" class="section">
+            <form id="upload-form" enctype="multipart/form-data">
+                <div class="file-input-wrapper">
+                    <input type="file" id="file-input" name="file" accept=".txt,.pdf,.docx" required>
+                    <label for="file-input" class="file-label">
+                        <span id="file-name">Choose a file...</span>
+                        <span class="browse-btn">Browse</span>
+                    </label>
+                </div>
+                <p class="help-text">Supported formats: TXT, PDF, DOCX (max 50MB)</p>
+                <button type="submit" class="btn btn-primary" id="analyze-btn">
+                    Analyze Book
+                </button>
+            </form>
+        </div>
+
+        <!-- Progress Section (hidden by default) -->
+        <div id="progress-section" class="section hidden">
+            <h2>Analyzing...</h2>
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-info">
+                    <span id="progress-stage">Initializing...</span>
+                    <span id="progress-percent">0%</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Section (hidden by default) -->
+        <div id="results-section" class="section hidden">
+            <h2>Analysis Complete!</h2>
+
+            <!-- Statistics Summary -->
+            <div class="stats-summary" id="stats-summary">
+                <!-- Statistics will be populated by JavaScript -->
+            </div>
+
+            <!-- Interactive Filters -->
+            <div class="filters-section">
+                <h3>Filter by CEFR Level</h3>
+                <div class="level-filters" id="level-filters">
+                    <button class="filter-btn active" data-level="all">All Levels</button>
+                    <button class="filter-btn" data-level="A1">A1</button>
+                    <button class="filter-btn" data-level="A2">A2</button>
+                    <button class="filter-btn" data-level="B1">B1</button>
+                    <button class="filter-btn" data-level="B2">B2</button>
+                    <button class="filter-btn" data-level="C1">C1</button>
+                    <button class="filter-btn" data-level="C2">C2</button>
+                    <button class="filter-btn" data-level="C2+">C2+</button>
+                </div>
+
+                <div class="search-box">
+                    <input
+                        type="text"
+                        id="word-search"
+                        placeholder="Search for words..."
+                        class="search-input"
+                    />
+                </div>
+            </div>
+
+            <!-- Word Lists -->
+            <div class="results-container">
+                <div class="word-list-section">
+                    <h3>Words <span id="word-count" class="count-badge">0</span></h3>
+                    <div id="word-list" class="word-list">
+                        <!-- Words will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <div class="word-list-section">
+                    <h3>Phrasal Verbs <span id="phrase-count" class="count-badge">0</span></h3>
+                    <div id="phrase-list" class="word-list">
+                        <!-- Phrasal verbs will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Word Detail Modal -->
+            <div id="word-modal" class="modal hidden">
+                <div class="modal-content">
+                    <span class="modal-close" id="modal-close">&times;</span>
+                    <h3 id="modal-word"></h3>
+                    <div id="modal-details">
+                        <!-- Word details will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Download Buttons -->
+            <div class="download-buttons">
+                <button class="btn btn-download" id="download-json">
+                    Download JSON
+                </button>
+                <button class="btn btn-download" id="download-csv">
+                    Download CSV
+                </button>
+                <button class="btn btn-download" id="download-markdown">
+                    Download Markdown
+                </button>
+            </div>
+
+            <button class="btn btn-secondary" id="analyze-another">
+                Analyze Another Book
+            </button>
+        </div>
+
+        <!-- Error Section (hidden by default) -->
+        <div id="error-section" class="section hidden">
+            <div class="error-message">
+                <h2>Error</h2>
+                <p id="error-text"></p>
+                <button class="btn btn-secondary" id="try-again">
+                    Try Again
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,495 @@
+openapi: 3.0.3
+info:
+  title: Vocabulary Analyzer Web API
+  description: |
+    Simple web interface for the Vocabulary Analyzer tool.
+    Allows uploading book files, tracking analysis progress, and downloading results.
+
+    **Design Philosophy**: Minimal REST API with Server-Sent Events for progress updates.
+  version: 1.0.0
+  contact:
+    name: Vocabulary Analyzer
+  license:
+    name: MIT
+
+servers:
+  - url: http://localhost:5000
+    description: Development server (Flask built-in)
+  - url: http://localhost:8000
+    description: Production server (Gunicorn/Waitress)
+
+tags:
+  - name: upload
+    description: File upload operations
+  - name: progress
+    description: Real-time progress tracking
+  - name: download
+    description: Result download operations
+  - name: static
+    description: Frontend static files
+
+paths:
+  /:
+    get:
+      summary: Serve main web interface
+      description: Returns the single-page HTML interface for file upload and analysis
+      tags:
+        - static
+      responses:
+        '200':
+          description: HTML page served successfully
+          content:
+            text/html:
+              schema:
+                type: string
+                example: "<!DOCTYPE html><html>..."
+
+  /upload:
+    post:
+      summary: Upload book file for analysis
+      description: |
+        Upload a book file (TXT, PDF, or DOCX) for vocabulary analysis.
+
+        **Validation Steps**:
+        1. File size ≤ 50MB
+        2. File type in [.txt, .pdf, .docx]
+        3. Magic number matches extension
+        4. File is readable and not corrupted
+
+        **Returns**: Session ID for tracking progress
+      tags:
+        - upload
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - file
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: Book file to analyze (TXT/PDF/DOCX)
+      responses:
+        '200':
+          description: File uploaded successfully, analysis started
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UploadResponse'
+              example:
+                session_id: "550e8400-e29b-41d4-a716-446655440000"
+                filename: "pride_and_prejudice.txt"
+                file_size: 704352
+                file_type: "txt"
+                progress_url: "/progress/550e8400-e29b-41d4-a716-446655440000"
+        '400':
+          description: Invalid request (no file, wrong type, corrupted)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                no_file:
+                  value:
+                    error_code: "NO_FILE_PROVIDED"
+                    error_message: "No file was uploaded"
+                invalid_type:
+                  value:
+                    error_code: "UPLOAD_INVALID_TYPE"
+                    error_message: "Unsupported file type. Please upload TXT, PDF, or DOCX files only."
+                corrupted:
+                  value:
+                    error_code: "UPLOAD_CORRUPTED"
+                    error_message: "The uploaded file appears to be corrupted or unreadable."
+        '413':
+          description: File too large (exceeds 50MB limit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: "UPLOAD_TOO_LARGE"
+                error_message: "File size exceeds 50MB limit. Please upload a smaller file."
+        '500':
+          description: Server error during upload processing
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /progress/{session_id}:
+    get:
+      summary: Stream real-time analysis progress
+      description: |
+        Server-Sent Events (SSE) endpoint for real-time progress updates.
+
+        **Event Types**:
+        - `progress`: Stage and percentage updates
+        - `complete`: Analysis finished successfully
+        - `error`: Analysis failed
+
+        **Client Usage**:
+        ```javascript
+        const eventSource = new EventSource('/progress/' + sessionId);
+        eventSource.addEventListener('progress', (e) => {
+          const data = JSON.parse(e.data);
+          updateProgressBar(data.percentage);
+        });
+        ```
+      tags:
+        - progress
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session ID from upload response
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: SSE stream of progress events
+          content:
+            text/event-stream:
+              schema:
+                type: string
+              examples:
+                progress_event:
+                  value: |
+                    event: progress
+                    data: {"stage":"tokenizing","stage_name":"Tokenizing and lemmatizing words","percentage":40,"message":"Processing batch 5/12"}
+
+                    event: progress
+                    data: {"stage":"levels","stage_name":"Matching CEFR levels","percentage":80,"message":"Matching 2145 unique words"}
+
+                    event: complete
+                    data: {"session_id":"550e8400...","download_urls":{"json":"/download/550e8400.../json","csv":"/download/550e8400.../csv","markdown":"/download/550e8400.../markdown"},"statistics":{"total_words":6544,"unique_words":2145,"phrasal_verbs":18}}
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: "SESSION_NOT_FOUND"
+                error_message: "No session found with the provided ID"
+        '410':
+          description: Session expired (older than 1 hour)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: "SESSION_EXPIRED"
+                error_message: "This session has expired. Please upload your file again."
+
+  /download/{session_id}/{format}:
+    get:
+      summary: Download analysis results
+      description: |
+        Download completed analysis results in specified format.
+
+        **Formats**:
+        - `json`: Structured data with all details
+        - `csv`: Two files (words and phrases) zipped together
+        - `markdown`: Human-readable report
+
+        **Filename Pattern**: `{original_filename}_vocabulary.{format}`
+      tags:
+        - download
+      parameters:
+        - name: session_id
+          in: path
+          required: true
+          description: Session ID from upload response
+          schema:
+            type: string
+            format: uuid
+        - name: format
+          in: path
+          required: true
+          description: Output format
+          schema:
+            type: string
+            enum:
+              - json
+              - csv
+              - markdown
+      responses:
+        '200':
+          description: Analysis results file
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VocabularyAnalysisJSON'
+              example:
+                metadata:
+                  source_file: "pride_and_prejudice.txt"
+                  analyzed_at: "2025-11-04T10:30:00Z"
+                  processing_time_seconds: 12.5
+                statistics:
+                  total_words: 127377
+                  unique_words: 6544
+                  unique_phrases: 18
+                  level_distribution:
+                    A1: 569
+                    A2: 906
+                    B1: 2145
+                    B2: 1456
+                    C1: 892
+                    C2: 398
+                    C2+: 178
+                words:
+                  - lemma: "abandon"
+                    level: "C1"
+                    frequency: 3
+                    chinese_translation: "放弃; 抛弃"
+                    example_sentences:
+                      - "She abandoned all hope of seeing him again."
+                phrases:
+                  - phrase: "look up"
+                    level: "B1"
+                    frequency: 2
+                    is_separable: true
+                    example_sentences:
+                      - "I looked up the word in the dictionary."
+            text/csv:
+              schema:
+                type: string
+                description: ZIP file containing words.csv and phrases.csv
+            text/markdown:
+              schema:
+                type: string
+                example: |
+                  # Vocabulary Analysis: pride_and_prejudice.txt
+
+                  ## Statistics
+                  - Total words: 127,377
+                  - Unique words: 6,544
+                  - Phrasal verbs: 18
+                  ...
+        '404':
+          description: Session not found or analysis not complete
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: "RESULTS_NOT_READY"
+                error_message: "Analysis results are not available yet. Please wait for analysis to complete."
+        '400':
+          description: Invalid format specified
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error_code: "INVALID_FORMAT"
+                error_message: "Invalid format. Supported formats: json, csv, markdown"
+
+components:
+  schemas:
+    UploadResponse:
+      type: object
+      required:
+        - session_id
+        - filename
+        - file_size
+        - file_type
+        - progress_url
+      properties:
+        session_id:
+          type: string
+          format: uuid
+          description: Unique session identifier
+        filename:
+          type: string
+          description: Sanitized filename
+        file_size:
+          type: integer
+          description: File size in bytes
+          minimum: 1
+          maximum: 52428800  # 50MB
+        file_type:
+          type: string
+          enum:
+            - txt
+            - pdf
+            - docx
+          description: Detected file type
+        progress_url:
+          type: string
+          format: uri
+          description: SSE endpoint for progress updates
+          example: "/progress/550e8400-e29b-41d4-a716-446655440000"
+
+    ProgressEvent:
+      type: object
+      required:
+        - stage
+        - stage_name
+        - percentage
+      properties:
+        stage:
+          type: string
+          enum:
+            - validating
+            - extracting
+            - tokenizing
+            - phrases
+            - levels
+            - statistics
+            - completed
+          description: Current processing stage
+        stage_name:
+          type: string
+          description: Human-readable stage name
+          example: "Tokenizing and lemmatizing words"
+        percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Overall progress percentage
+        message:
+          type: string
+          description: Detailed progress message
+          example: "Processing sentence batch 5/12"
+
+    CompleteEvent:
+      type: object
+      required:
+        - session_id
+        - download_urls
+        - statistics
+      properties:
+        session_id:
+          type: string
+          format: uuid
+        download_urls:
+          type: object
+          properties:
+            json:
+              type: string
+              format: uri
+            csv:
+              type: string
+              format: uri
+            markdown:
+              type: string
+              format: uri
+        statistics:
+          $ref: '#/components/schemas/StatisticsSummary'
+
+    StatisticsSummary:
+      type: object
+      properties:
+        total_words:
+          type: integer
+          description: Total word count in source text
+        unique_words:
+          type: integer
+          description: Number of unique words
+        phrasal_verbs:
+          type: integer
+          description: Number of phrasal verbs found
+        processing_time_seconds:
+          type: number
+          format: float
+          description: Analysis processing time
+
+    ErrorResponse:
+      type: object
+      required:
+        - error_code
+        - error_message
+      properties:
+        error_code:
+          type: string
+          description: Machine-readable error code
+          enum:
+            - NO_FILE_PROVIDED
+            - UPLOAD_INVALID_TYPE
+            - UPLOAD_TOO_LARGE
+            - UPLOAD_CORRUPTED
+            - EXTRACTION_FAILED
+            - PROCESSING_FAILED
+            - SESSION_NOT_FOUND
+            - SESSION_EXPIRED
+            - RESULTS_NOT_READY
+            - INVALID_FORMAT
+            - INTERNAL_ERROR
+        error_message:
+          type: string
+          description: User-friendly error message
+        error_stage:
+          type: string
+          description: Processing stage where error occurred (if applicable)
+
+    VocabularyAnalysisJSON:
+      type: object
+      description: Complete analysis results (matches existing JSON exporter output)
+      properties:
+        metadata:
+          type: object
+          properties:
+            source_file:
+              type: string
+            analyzed_at:
+              type: string
+              format: date-time
+            processing_time_seconds:
+              type: number
+        statistics:
+          type: object
+          properties:
+            total_words:
+              type: integer
+            unique_words:
+              type: integer
+            unique_phrases:
+              type: integer
+            level_distribution:
+              type: object
+              additionalProperties:
+                type: integer
+        words:
+          type: array
+          items:
+            type: object
+            properties:
+              lemma:
+                type: string
+              level:
+                type: string
+              frequency:
+                type: integer
+              chinese_translation:
+                type: string
+              example_sentences:
+                type: array
+                items:
+                  type: string
+        phrases:
+          type: array
+          items:
+            type: object
+            properties:
+              phrase:
+                type: string
+              level:
+                type: string
+              frequency:
+                type: integer
+              is_separable:
+                type: boolean
+              example_sentences:
+                type: array
+                items:
+                  type: string
+
+  securitySchemes: {}
+
+security: []

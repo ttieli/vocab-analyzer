@@ -1,0 +1,29 @@
+# 20251103 English Vocabulary Development Guidelines
+
+Auto-generated from all feature plans. Last updated: 2025-11-04
+
+## Active Technologies
+
+- Python 3.10+ (matching existing project) + Flask 3.0+ (web framework), existing vocab_analyzer modules (unchanged) (001-web-frontend)
+
+## Project Structure
+
+```text
+src/
+tests/
+```
+
+## Commands
+
+cd src [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] pytest [ONLY COMMANDS FOR ACTIVE TECHNOLOGIES][ONLY COMMANDS FOR ACTIVE TECHNOLOGIES] ruff check .
+
+## Code Style
+
+Python 3.10+ (matching existing project): Follow standard conventions
+
+## Recent Changes
+
+- 001-web-frontend: Added Python 3.10+ (matching existing project) + Flask 3.0+ (web framework), existing vocab_analyzer modules (unchanged)
+
+<!-- MANUAL ADDITIONS START -->
+<!-- MANUAL ADDITIONS END -->
