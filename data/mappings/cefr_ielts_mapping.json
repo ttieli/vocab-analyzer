@@ -1,0 +1,97 @@
+{
+  "metadata": {
+    "title": "CEFR to IELTS Score Mapping",
+    "description": "Mapping between CEFR levels (A1-C2) and IELTS score bands",
+    "source": "Based on British Council and Cambridge Assessment guidelines",
+    "created_date": "2025-11-03",
+    "version": "1.0",
+    "disclaimer": "This is a reference mapping. Actual IELTS scores depend on individual performance in all four skills (Listening, Reading, Writing, Speaking)."
+  },
+  "mappings": [
+    {
+      "cefr_level": "A1",
+      "cefr_name": "Beginner",
+      "ielts_band_min": 2.0,
+      "ielts_band_max": 3.0,
+      "ielts_description": "Extremely Limited User to Very Limited User",
+      "exam_equivalent": "Pre-KET",
+      "vocabulary_size": "~500-1000 words",
+      "description": "Can understand and use very basic expressions"
+    },
+    {
+      "cefr_level": "A2",
+      "cefr_name": "Elementary",
+      "ielts_band_min": 3.0,
+      "ielts_band_max": 4.0,
+      "ielts_description": "Very Limited User to Limited User",
+      "exam_equivalent": "KET (Key English Test)",
+      "vocabulary_size": "~1000-2000 words",
+      "description": "Can deal with simple, straightforward information and begin to express oneself"
+    },
+    {
+      "cefr_level": "B1",
+      "cefr_name": "Intermediate",
+      "ielts_band_min": 4.5,
+      "ielts_band_max": 5.5,
+      "ielts_description": "Modest User to Competent User",
+      "exam_equivalent": "PET (Preliminary English Test)",
+      "vocabulary_size": "~2000-4000 words",
+      "description": "Can handle everyday situations and familiar topics"
+    },
+    {
+      "cefr_level": "B2",
+      "cefr_name": "Upper Intermediate",
+      "ielts_band_min": 6.0,
+      "ielts_band_max": 6.5,
+      "ielts_description": "Competent User to Good User",
+      "exam_equivalent": "FCE (First Certificate in English)",
+      "vocabulary_size": "~4000-6000 words",
+      "description": "Can interact with native speakers and understand complex texts"
+    },
+    {
+      "cefr_level": "C1",
+      "cefr_name": "Advanced",
+      "ielts_band_min": 7.0,
+      "ielts_band_max": 8.0,
+      "ielts_description": "Good User to Very Good User",
+      "exam_equivalent": "CAE (Certificate in Advanced English)",
+      "vocabulary_size": "~6000-10000 words",
+      "description": "Can use language flexibly for social, academic, and professional purposes"
+    },
+    {
+      "cefr_level": "C2",
+      "cefr_name": "Proficiency",
+      "ielts_band_min": 8.5,
+      "ielts_band_max": 9.0,
+      "ielts_description": "Very Good User to Expert User",
+      "exam_equivalent": "CPE (Certificate of Proficiency in English)",
+      "vocabulary_size": "~10000+ words",
+      "description": "Can understand virtually everything heard or read with ease"
+    },
+    {
+      "cefr_level": "C2+",
+      "cefr_name": "Beyond Proficiency / Out of Syllabus",
+      "ielts_band_min": 9.0,
+      "ielts_band_max": 9.0,
+      "ielts_description": "Expert User",
+      "exam_equivalent": "N/A - Beyond standard curriculum",
+      "vocabulary_size": "10000+ words (specialized/technical)",
+      "description": "Specialized vocabulary, proper nouns, rare words, and technical terminology"
+    }
+  ],
+  "quick_reference": {
+    "A1": "IELTS 2.0-3.0",
+    "A2": "IELTS 3.0-4.0",
+    "B1": "IELTS 4.5-5.5",
+    "B2": "IELTS 6.0-6.5",
+    "C1": "IELTS 7.0-8.0",
+    "C2": "IELTS 8.5-9.0",
+    "C2+": "IELTS 9.0"
+  },
+  "notes": [
+    "IELTS scores are averages across four skills; individual skills may vary",
+    "CEFR levels represent overall language ability, not just vocabulary knowledge",
+    "The C2+ category is a custom addition for this project to handle out-of-syllabus vocabulary",
+    "Vocabulary size estimates are approximate and vary by individual learning"
+  ]
+}

@@ -1,0 +1,74 @@
+# Default configuration for vocab-analyzer
+
+# Data paths
+data:
+  vocabularies_dir: "data/vocabularies"
+  phrases_dir: "data/phrases"
+  dictionaries_dir: "data/dictionaries"
+  sample_books_dir: "data/sample_books"
+  mappings_dir: "data/mappings"
+
+  # Specific files
+  cefr_wordlist: "data/vocabularies/cefr_wordlist.csv"
+  phrases: "data/phrases/phrasal-verbs/common.json"
+  phrasal_verbs: "data/phrases/phrasal-verbs/common.json"
+  ecdict: "data/dictionaries/ECDICT/ecdict.csv"
+  cefr_ielts_mapping: "data/mappings/cefr_ielts_mapping.json"
+
+# NLP processing settings
+nlp:
+  model: "en_core_web_sm"
+  batch_size: 100
+  n_process: 1
+  disable_components: ["ner"]  # Disable components we don't need for performance
+
+# Text extraction settings
+extraction:
+  encoding: "utf-8"
+  pdf_max_pages: 1000
+  docx_max_paragraphs: 10000
+
+# Vocabulary analysis settings
+analysis:
+  min_word_length: 2
+  max_word_length: 45
+
+  # Words to exclude
+  exclude_numbers: true
+  exclude_punctuation: true
+
+  # Phrase detection
+  detect_phrases: true
+  enable_phrases: true
+  max_phrase_length: 4  # Maximum number of words in a phrase
+  default_phrase_level: "B2"  # Default level for unmatched phrasal verbs
+
+  # CEFR level assignment
+  default_level_unknown: "C2+"  # Level for words not in our vocabulary list
+
+# Output settings
+output:
+  formats: ["json", "csv", "markdown"]
+  default_format: "json"
+  include_examples: true
+  max_examples_per_word: 3
+  sort_by: "frequency"  # Options: frequency, alphabetical, level
+
+# Statistics settings
+statistics:
+  show_level_distribution: true
+  show_word_type_distribution: true
+  show_top_words: 20
+
+# Performance settings
+performance:
+  cache_vocabulary: true
+  cache_phrases: true
+  use_multiprocessing: false  # Set to true for very large files
+
+# Logging settings
+logging:
+  level: "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "vocab_analyzer.log"
+  console: true

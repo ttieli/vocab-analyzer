@@ -1,0 +1,37 @@
+{
+  "source_file": "sample_text.txt",
+  "statistics": {
+    "total_unique_words": 50,
+    "total_word_occurrences": 65,
+    "level_distribution": {
+      "A1": {"count": 20, "percentage": 40.0},
+      "A2": {"count": 15, "percentage": 30.0},
+      "B1": {"count": 10, "percentage": 20.0},
+      "B2": {"count": 3, "percentage": 6.0},
+      "C1": {"count": 1, "percentage": 2.0},
+      "C2": {"count": 1, "percentage": 2.0}
+    }
+  },
+  "words": [
+    {
+      "word": "quick",
+      "level": "A2",
+      "word_type": "adj",
+      "definition_cn": "快的;迅速的",
+      "frequency": 1,
+      "examples": ["The quick brown fox jumps over the lazy dog."]
+    },
+    {
+      "word": "vocabulary",
+      "level": "B1",
+      "word_type": "noun",
+      "definition_cn": "词汇;词汇量",
+      "frequency": 3,
+      "examples": [
+        "I am learning English vocabulary at different CEFR levels.",
+        "The vocabulary includes words from A1 to C2 levels.",
+        "Reading books is an excellent way to expand your vocabulary."
+      ]
+    }
+  ]
+}
