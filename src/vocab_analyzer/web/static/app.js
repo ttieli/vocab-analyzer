@@ -987,13 +987,24 @@ function parseTextForReading(processedText, analysisResults) {
     }
 
     // Build word lookup map for O(1) access
+    // Include both lemmatized form AND all original forms (running → run, etc.)
     const wordLookupMap = new Map();
 
     analysisResults.words?.forEach(word => {
-        wordLookupMap.set(word.word.toLowerCase(), {
+        const wordEntry = {
             ...word,
             type: 'word'
-        });
+        };
+
+        // Add lemmatized form (e.g., "run")
+        wordLookupMap.set(word.word.toLowerCase(), wordEntry);
+
+        // Add all original forms (e.g., "running", "runs", "ran")
+        if (word.original_forms && Array.isArray(word.original_forms)) {
+            word.original_forms.forEach(form => {
+                wordLookupMap.set(form.toLowerCase(), wordEntry);
+            });
+        }
     });
 
     analysisResults.phrasal_verbs?.forEach(pv => {
@@ -1004,14 +1015,12 @@ function parseTextForReading(processedText, analysisResults) {
         });
     });
 
-    // DEBUG: Check word data structure
+    // DEBUG: Check word data structure and coverage
     if (wordLookupMap.size > 0) {
         const firstWord = Array.from(wordLookupMap.values())[0];
         console.log('[DEBUG] Sample word data:', firstWord);
-        console.log('[DEBUG] Has cefr_level?', 'cefr_level' in firstWord);
-        console.log('[DEBUG] Has level?', 'level' in firstWord);
-        console.log('[DEBUG] cefr_level value:', firstWord.cefr_level);
-        console.log('[DEBUG] level value:', firstWord.level);
+        console.log('[DEBUG] Total lookup entries (includes all word forms):', wordLookupMap.size);
+        console.log('[DEBUG] Unique words:', analysisResults.words?.length || 0);
     }
 
     // Get current filter state
