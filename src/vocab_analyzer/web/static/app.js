@@ -1004,6 +1004,16 @@ function parseTextForReading(processedText, analysisResults) {
         });
     });
 
+    // DEBUG: Check word data structure
+    if (wordLookupMap.size > 0) {
+        const firstWord = Array.from(wordLookupMap.values())[0];
+        console.log('[DEBUG] Sample word data:', firstWord);
+        console.log('[DEBUG] Has cefr_level?', 'cefr_level' in firstWord);
+        console.log('[DEBUG] Has level?', 'level' in firstWord);
+        console.log('[DEBUG] cefr_level value:', firstWord.cefr_level);
+        console.log('[DEBUG] level value:', firstWord.level);
+    }
+
     // Get current filter state
     const activeLevel = document.querySelector('.filter-btn.active')?.getAttribute('data-level') || 'all';
     const searchTerm = document.getElementById('word-search')?.value.toLowerCase() || '';
@@ -1038,15 +1048,21 @@ function parseTextForReading(processedText, analysisResults) {
             const wordData = wordLookupMap.get(token.toLowerCase());
 
             if (wordData) {
+                // DEBUG: Log first few words to verify data-level
+                if (Math.random() < 0.001) { // Log ~0.1% of words to avoid console spam
+                    console.log('[DEBUG] Word:', token, 'Level:', wordData.cefr_level || wordData.level, 'Data:', wordData);
+                }
+
                 // Check if word matches filter
-                const matchesFilter = activeLevel === 'all' || wordData.cefr_level === activeLevel;
+                const level = wordData.cefr_level || wordData.level; // Try both field names
+                const matchesFilter = activeLevel === 'all' || level === activeLevel;
 
                 // Check if word matches search
                 const matchesSearch = !searchTerm || token.toLowerCase().includes(searchTerm);
 
                 if (matchesFilter) {
                     const searchClass = matchesSearch && searchTerm ? ' search-match' : '';
-                    paraHTML += `<span class="cefr-word${searchClass}" data-word="${wordData.word}" data-level="${wordData.cefr_level}" onclick="handleWordClick('${wordData.word}')">${token}</span>`;
+                    paraHTML += `<span class="cefr-word${searchClass}" data-word="${wordData.word}" data-level="${level}" onclick="handleWordClick('${wordData.word}')">${token}</span>`;
                 } else {
                     // Word exists but filtered out - show as plain text
                     paraHTML += token;
