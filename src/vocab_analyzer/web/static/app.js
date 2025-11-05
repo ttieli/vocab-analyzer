@@ -212,6 +212,9 @@ async function showResults() {
         const text = await blob.text();
         analysisResults = JSON.parse(text);
 
+        // Store in window for reading view access
+        window.currentAnalysisResults = analysisResults;
+
         // DEBUG: Log analysis results
         console.log('[DEBUG] Analysis results loaded');
         console.log('[DEBUG] Has processed_text:', 'processed_text' in analysisResults);
@@ -1111,8 +1114,14 @@ function initReadingView() {
 
     if (readingTab) {
         readingTab.addEventListener('click', () => {
+            console.log('[DEBUG] Reading tab clicked');
+            console.log('[DEBUG] window.currentAnalysisResults exists:', !!window.currentAnalysisResults);
+            console.log('[DEBUG] Has processed_text:', window.currentAnalysisResults && 'processed_text' in window.currentAnalysisResults);
+
             if (window.currentAnalysisResults && window.currentAnalysisResults.processed_text) {
                 parseTextForReading(window.currentAnalysisResults.processed_text, window.currentAnalysisResults);
+            } else {
+                console.warn('[DEBUG] Cannot render reading view - missing data');
             }
         });
     }
