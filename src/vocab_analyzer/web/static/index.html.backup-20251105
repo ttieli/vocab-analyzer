@@ -134,17 +134,6 @@
                     </span>
                     <span id="phrase-count" class="count-badge">0</span>
                 </button>
-                <button class="tab-btn"
-                        id="reading-tab"
-                        role="tab"
-                        aria-selected="false"
-                        aria-controls="reading-panel"
-                        data-tab="reading">
-                    <span class="bilingual">
-                        <span class="cn">全文阅读</span>
-                        <span class="en">Reading View</span>
-                    </span>
-                </button>
             </div>
 
             <!-- Tab Content Panels -->
@@ -167,19 +156,6 @@
                      hidden>
                     <div id="phrase-list" class="word-list">
                         <!-- Phrasal verbs will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div id="reading-panel"
-                     class="tab-panel"
-                     role="tabpanel"
-                     aria-labelledby="reading-tab"
-                     tabindex="0"
-                     hidden>
-                    <div class="reading-container">
-                        <div class="reading-content" id="reading-content">
-                            <!-- Full text with CEFR-colored words will be populated by JavaScript -->
-                        </div>
                     </div>
                 </div>
             </div>

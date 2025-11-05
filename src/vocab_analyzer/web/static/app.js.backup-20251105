@@ -396,9 +396,6 @@ function updateWordDisplay() {
         restoreTabState();
         initKeyboardNavigation();
         window.tabsInitialized = true;
-
-        // T014: Feature 005 - Initialize reading view tab
-        initReadingView();
     }
 
     // Helper function to show inline translation
@@ -440,9 +437,6 @@ function setupInteractiveFilters() {
             // Update filter and refresh display
             currentFilter = btn.getAttribute('data-level');
             updateWordDisplay();
-
-            // T015: Feature 005 - Update reading view when filter changes
-            updateReadingView();
         });
     });
 
@@ -453,9 +447,6 @@ function setupInteractiveFilters() {
         searchTimeout = setTimeout(() => {
             searchTerm = e.target.value;
             updateWordDisplay();
-
-            // T015: Feature 005 - Update reading view when search changes
-            updateReadingView();
         }, 300);
     });
 }
@@ -898,207 +889,4 @@ function closeModalWithFocusReturn() {
             lastFocusedElement.focus();
         }, 100);
     }
-}
-
-/* ===================================================================
-   FEATURE 005: IMMERSIVE FULL-TEXT READING VIEW
-   =================================================================== */
-
-/**
- * T012: Find word data in analysis results
- * @param {string} token - Word to look up (lowercase)
- * @param {Object} analysisResults - Analysis results with words and phrasal verbs
- * @returns {Object|null} Word data object or null if not found
- */
-function findWordData(token, analysisResults) {
-    if (!analysisResults || !token) return null;
-
-    const lowerToken = token.toLowerCase();
-
-    // Check words array
-    const wordMatch = analysisResults.words?.find(w => w.word.toLowerCase() === lowerToken);
-    if (wordMatch) {
-        return { ...wordMatch, type: 'word' };
-    }
-
-    // Check phrasal verbs array
-    const phraseMatch = analysisResults.phrasal_verbs?.find(pv => pv.phrase.toLowerCase() === lowerToken);
-    if (phraseMatch) {
-        return { ...phraseMatch, word: phraseMatch.phrase, type: 'phrasal_verb' };
-    }
-
-    return null;
-}
-
-/**
- * T011: Parse processed text into reading view HTML with CEFR-colored, clickable words
- * @param {string} processedText - Full book text from analysis results
- * @param {Object} analysisResults - Analysis results containing words and phrasal verbs
- */
-function parseTextForReading(processedText, analysisResults) {
-    const readingContent = document.getElementById('reading-content');
-
-    // Validate inputs
-    if (!processedText || processedText.trim().length === 0) {
-        readingContent.innerHTML = `
-            <div style="text-align: center; padding: 4rem 2rem; color: #6b7280;">
-                <p class="bilingual">
-                    <span class="cn">暂无文本</span>
-                    <span class="en">No text available</span>
-                </p>
-            </div>
-        `;
-        return;
-    }
-
-    if (!analysisResults || !analysisResults.words) {
-        console.error('Invalid analysisResults');
-        readingContent.innerHTML = `
-            <div style="text-align: center; padding: 4rem 2rem; color: #6b7280;">
-                <p class="bilingual">
-                    <span class="cn">暂无文本</span>
-                    <span class="en">No text available</span>
-                </p>
-            </div>
-        `;
-        return;
-    }
-
-    // Build word lookup map for O(1) access
-    const wordLookupMap = new Map();
-
-    analysisResults.words?.forEach(word => {
-        wordLookupMap.set(word.word.toLowerCase(), {
-            ...word,
-            type: 'word'
-        });
-    });
-
-    analysisResults.phrasal_verbs?.forEach(pv => {
-        wordLookupMap.set(pv.phrase.toLowerCase(), {
-            ...pv,
-            word: pv.phrase,
-            type: 'phrasal_verb'
-        });
-    });
-
-    // Get current filter state
-    const activeLevel = document.querySelector('.filter-btn.active')?.getAttribute('data-level') || 'all';
-    const searchTerm = document.getElementById('word-search')?.value.toLowerCase() || '';
-
-    // Split text into paragraphs
-    const paragraphs = processedText.split('\n\n').filter(p => p.trim().length > 0);
-
-    // Process each paragraph
-    let html = '';
-
-    paragraphs.forEach(para => {
-        // Split paragraph into tokens (words and punctuation)
-        const tokens = para.split(/(\s+|[.,;:!?—\-\[\](){}'""])/);
-
-        let paraHTML = '<p>';
-
-        tokens.forEach(token => {
-            if (!token || token.trim().length === 0) {
-                paraHTML += token;
-                return;
-            }
-
-            // Check if token is a word (not punctuation or whitespace)
-            const isWord = /^[a-zA-Z'-]+$/.test(token);
-
-            if (!isWord) {
-                paraHTML += token;
-                return;
-            }
-
-            // Look up word data
-            const wordData = wordLookupMap.get(token.toLowerCase());
-
-            if (wordData) {
-                // Check if word matches filter
-                const matchesFilter = activeLevel === 'all' || wordData.cefr_level === activeLevel;
-
-                // Check if word matches search
-                const matchesSearch = !searchTerm || token.toLowerCase().includes(searchTerm);
-
-                if (matchesFilter) {
-                    const searchClass = matchesSearch && searchTerm ? ' search-match' : '';
-                    paraHTML += `<span class="cefr-word${searchClass}" data-word="${wordData.word}" data-level="${wordData.cefr_level}" onclick="handleWordClick('${wordData.word}')">${token}</span>`;
-                } else {
-                    // Word exists but filtered out - show as plain text
-                    paraHTML += token;
-                }
-            } else {
-                // Word not in analysis - show as plain text
-                paraHTML += token;
-            }
-        });
-
-        paraHTML += '</p>';
-        html += paraHTML;
-    });
-
-    readingContent.innerHTML = html;
-}
-
-/**
- * T015: Update reading view when filters or search change
- */
-function updateReadingView() {
-    if (!window.currentAnalysisResults || !window.currentAnalysisResults.processed_text) {
-        return;
-    }
-
-    const readingPanel = document.getElementById('reading-panel');
-    if (readingPanel && !readingPanel.hasAttribute('hidden')) {
-        // Reading view is active - re-render with current filters
-        parseTextForReading(window.currentAnalysisResults.processed_text, window.currentAnalysisResults);
-    }
-}
-
-/**
- * T016: Handle word click in reading view
- * @param {string} word - Word that was clicked
- */
-function handleWordClick(word) {
-    if (!window.currentAnalysisResults) {
-        console.error('No analysis results available');
-        return;
-    }
-
-    // Find word data using the findWordData helper
-    const wordData = findWordData(word, window.currentAnalysisResults);
-
-    if (wordData) {
-        // Call existing showWordDetails function (Feature 004)
-        showWordDetails(wordData);
-    } else {
-        console.warn(`Word "${word}" not found in analysis results`);
-    }
-}
-
-/**
- * T013: Initialize reading view tab
- */
-function initReadingView() {
-    const readingTab = document.getElementById('reading-tab');
-
-    if (readingTab) {
-        readingTab.addEventListener('click', () => {
-            if (window.currentAnalysisResults && window.currentAnalysisResults.processed_text) {
-                parseTextForReading(window.currentAnalysisResults.processed_text, window.currentAnalysisResults);
-            }
-        });
-    }
-
-    // T020: Add Escape key listener for modal (Feature 005 enhancement)
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            const modal = document.getElementById('word-modal');
-            if (modal && !modal.classList.contains('hidden')) {
-                closeModalWithFocusReturn();
-            }
-        }
-    });
 }

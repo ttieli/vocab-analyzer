@@ -108,78 +108,27 @@
                 </div>
             </div>
 
-            <!-- Feature 004: T016 - Tab Navigation System -->
-            <div class="tab-navigation" role="tablist" aria-label="Word type selection">
-                <button class="tab-btn active"
-                        id="words-tab"
-                        role="tab"
-                        aria-selected="true"
-                        aria-controls="words-panel"
-                        data-tab="words">
-                    <span class="bilingual">
-                        <span class="cn">单词</span>
+            <!-- Word Lists -->
+            <div class="results-container">
+                <div class="word-list-section">
+                    <h3 class="bilingual">
                         <span class="en">Words</span>
-                    </span>
-                    <span id="word-count" class="count-badge">0</span>
-                </button>
-                <button class="tab-btn"
-                        id="phrases-tab"
-                        role="tab"
-                        aria-selected="false"
-                        aria-controls="phrases-panel"
-                        data-tab="phrases">
-                    <span class="bilingual">
-                        <span class="cn">短语动词</span>
-                        <span class="en">Phrasal Verbs</span>
-                    </span>
-                    <span id="phrase-count" class="count-badge">0</span>
-                </button>
-                <button class="tab-btn"
-                        id="reading-tab"
-                        role="tab"
-                        aria-selected="false"
-                        aria-controls="reading-panel"
-                        data-tab="reading">
-                    <span class="bilingual">
-                        <span class="cn">全文阅读</span>
-                        <span class="en">Reading View</span>
-                    </span>
-                </button>
-            </div>
-
-            <!-- Tab Content Panels -->
-            <div class="tab-content-container">
-                <div id="words-panel"
-                     class="tab-panel active"
-                     role="tabpanel"
-                     aria-labelledby="words-tab"
-                     tabindex="0">
+                        <span class="cn">单词</span>
+                        <span id="word-count" class="count-badge">0</span>
+                    </h3>
                     <div id="word-list" class="word-list">
                         <!-- Words will be populated by JavaScript -->
                     </div>
                 </div>
 
-                <div id="phrases-panel"
-                     class="tab-panel"
-                     role="tabpanel"
-                     aria-labelledby="phrases-tab"
-                     tabindex="0"
-                     hidden>
+                <div class="word-list-section">
+                    <h3 class="bilingual">
+                        <span class="en">Phrasal Verbs</span>
+                        <span class="cn">短语动词</span>
+                        <span id="phrase-count" class="count-badge">0</span>
+                    </h3>
                     <div id="phrase-list" class="word-list">
                         <!-- Phrasal verbs will be populated by JavaScript -->
-                    </div>
-                </div>
-
-                <div id="reading-panel"
-                     class="tab-panel"
-                     role="tabpanel"
-                     aria-labelledby="reading-tab"
-                     tabindex="0"
-                     hidden>
-                    <div class="reading-container">
-                        <div class="reading-content" id="reading-content">
-                            <!-- Full text with CEFR-colored words will be populated by JavaScript -->
-                        </div>
                     </div>
                 </div>
             </div>
