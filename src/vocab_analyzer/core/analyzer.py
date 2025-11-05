@@ -179,12 +179,18 @@ class VocabularyAnalyzer:
 
         # Create Word objects
         for lemma, data in word_data.items():
-            # Get level and translation from matcher
+            # Get complete word information from matcher
+            word_info = self.level_matcher.get_word_info(lemma)
+
+            # Get level and translation
             level = self.level_matcher.get_word_level(
                 lemma, default=self.config.default_level_unknown
             )
 
             translation = self.level_matcher.get_translation(lemma)
+
+            # Get phonetic transcription if available
+            phonetic = word_info.get("phonetic", "") if word_info else ""
 
             # Map spaCy POS to simpler categories
             pos = self._simplify_pos(data["pos"])
@@ -197,6 +203,7 @@ class VocabularyAnalyzer:
                 definition_cn=translation,
                 frequency=data["count"],
                 original_forms=list(data["original_forms"]),
+                phonetic=phonetic if phonetic else None,
             )
 
             # Add examples if configured

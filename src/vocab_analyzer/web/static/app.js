@@ -32,6 +32,13 @@ const uploadForm = document.getElementById('upload-form');
 const fileInput = document.getElementById('file-input');
 const fileName = document.getElementById('file-name');
 
+// Text input elements
+const textForm = document.getElementById('text-form');
+const textInput = document.getElementById('text-input');
+const charCount = document.getElementById('char-count');
+const fileModeBtn = document.getElementById('file-mode-btn');
+const textModeBtn = document.getElementById('text-mode-btn');
+
 const progressFill = document.getElementById('progress-fill');
 const progressStage = document.getElementById('progress-stage');
 const progressPercent = document.getElementById('progress-percent');
@@ -240,6 +247,122 @@ async function showResults() {
     }
 }
 
+/**
+ * Calculate reading difficulty score based on CEFR distribution and text characteristics
+ * 计算阅读难度评分（基于CEFR分布和文本特征）
+ */
+function calculateReadingDifficulty(stats) {
+    const totalWords = stats.total_word_occurrences || 0;
+    const uniqueWords = stats.total_unique_words || 0;
+    const totalPhrases = stats.total_unique_phrases || 0;
+    const distribution = stats.level_distribution || {};
+
+    // CEFR level weights (权重)
+    const weights = { 'A1': 1, 'A2': 2, 'B1': 3, 'B2': 4, 'C1': 5, 'C2': 6, 'C2+': 7 };
+
+    // 1. Base Score: Weighted CEFR Score (基础难度分)
+    let baseScore = 0;
+    for (const [level, weight] of Object.entries(weights)) {
+        const percentage = (distribution[level]?.percentage || 0) / 100;
+        baseScore += percentage * weight;
+    }
+    // Normalize base score from [1, 7] range to [0, 1] range
+    // 将基础分从 [1, 7] 范围归一化到 [0, 1] 范围
+    baseScore = (baseScore - 1) / 6;
+
+    // 2. Lexical Diversity Factor (词汇多样性修正)
+    const diversity = uniqueWords / totalWords;
+    // Ensure diversity factor is between 0.7 and 1.5
+    const diversityFactor = Math.max(0.7, Math.min(1.5, 1 + 0.5 * (diversity - 0.4)));
+
+    // 3. Phrasal Verb Factor (短语动词修正)
+    // Use ratio instead of absolute count, with a cap at 1.3
+    const phrasalRatio = uniqueWords > 0 ? totalPhrases / uniqueWords : 0;
+    const phrasalFactor = Math.min(1.3, 1 + 0.5 * phrasalRatio);
+
+    // 4. Length Normalization (长度修正)
+    const lengthFactor = 1 - Math.exp(-totalWords / 300);
+
+    // 5. Final Score (综合难度得分, 0-100)
+    let finalScore = baseScore * diversityFactor * phrasalFactor * lengthFactor * 100;
+
+    // Ensure score is within 0-100 range
+    finalScore = Math.max(0, Math.min(100, finalScore));
+
+    // Determine level and interpretation
+    let level, levelCn, audience, audienceCn, description, descriptionCn;
+
+    if (finalScore < 20) {
+        level = 'A1-A2';
+        levelCn = '基础水平';
+        audience = 'Beginner / Young Children';
+        audienceCn = '英语初学者 / 儿童启蒙';
+        description = 'Simple vocabulary, suitable for early language learners';
+        descriptionCn = '词汇简单，适合英语启蒙阶段';
+    } else if (finalScore < 40) {
+        level = 'B1';
+        levelCn = '独立运用 - 初级';
+        audience = 'Elementary / ESL Intermediate';
+        audienceCn = '小学高年级 / ESL 初中';
+        description = 'Suitable for young learners with basic English foundation';
+        descriptionCn = '适合有一定英语基础的小学生或初中生阅读';
+    } else if (finalScore < 60) {
+        level = 'B2-C1';
+        levelCn = '独立运用 - 中级';
+        audience = 'Teenagers / General Adults';
+        audienceCn = '青少年 / 一般成人';
+        description = 'Moderate difficulty, suitable for intermediate English readers';
+        descriptionCn = '难度适中，适合中级英语水平读者';
+    } else if (finalScore < 80) {
+        level = 'C1-C2';
+        levelCn = '熟练运用';
+        audience = 'Advanced / Native High School';
+        audienceCn = '高级学习者 / 母语中学生';
+        description = 'Complex vocabulary, suitable for advanced learners';
+        descriptionCn = '词汇较复杂，适合英语高级学习者';
+    } else {
+        level = 'C2+';
+        levelCn = '专业水平';
+        audience = 'Academic / Professional';
+        audienceCn = '学术 / 专业领域';
+        description = 'Highly specialized, academic or literary content';
+        descriptionCn = '高度专业化，学术或文学性内容';
+    }
+
+    // Determine color based on score (green -> purple gradient)
+    let gradientColor;
+    if (finalScore < 20) {
+        gradientColor = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'; // Green
+    } else if (finalScore < 40) {
+        gradientColor = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'; // Blue
+    } else if (finalScore < 60) {
+        gradientColor = 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'; // Amber
+    } else if (finalScore < 80) {
+        gradientColor = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'; // Red
+    } else {
+        gradientColor = 'linear-gradient(135deg, #a855f7 0%, #9333ea 100%)'; // Purple
+    }
+
+    return {
+        score: finalScore.toFixed(1),
+        level,
+        levelCn,
+        audience,
+        audienceCn,
+        description,
+        descriptionCn,
+        gradientColor,
+        details: {
+            baseScore: baseScore.toFixed(2),
+            diversity: diversity.toFixed(2),
+            diversityFactor: diversityFactor.toFixed(2),
+            phrasalRatio: phrasalRatio.toFixed(3),
+            phrasalFactor: phrasalFactor.toFixed(2),
+            lengthFactor: lengthFactor.toFixed(2)
+        }
+    };
+}
+
 // Display statistics summary (T044)
 function displayStatistics(results) {
     const statsDiv = document.getElementById('stats-summary');
@@ -248,6 +371,9 @@ function displayStatistics(results) {
     const totalWords = stats.total_word_occurrences || 0;
     const uniqueWords = stats.total_unique_words || 0;
     const totalPhrases = stats.total_unique_phrases || 0;
+
+    // Calculate reading difficulty
+    const difficulty = calculateReadingDifficulty(stats);
 
     // Create CEFR distribution bars
     const cefrLevels = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2', 'C2+'];
@@ -261,7 +387,7 @@ function displayStatistics(results) {
             <div class="stat-bar">
                 <div class="stat-label">${level}: ${count} (${percentage}%)</div>
                 <div class="stat-bar-bg">
-                    <div class="stat-bar-fill" style="width: ${percentage}%"></div>
+                    <div class="stat-bar-fill level-${level}" style="width: ${percentage}%"></div>
                 </div>
             </div>
         `;
@@ -282,6 +408,71 @@ function displayStatistics(results) {
                 <div class="stat-label">Phrasal Verbs</div>
             </div>
         </div>
+
+        <!-- Reading Difficulty Score -->
+        <div class="difficulty-score">
+            <h4 class="bilingual">
+                <span class="en">📊 Reading Difficulty Assessment</span>
+                <span class="cn">阅读难度评估</span>
+            </h4>
+            <div class="difficulty-main">
+                <div class="difficulty-score-display">
+                    <div class="score-value" style="background: ${difficulty.gradientColor}; -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">${difficulty.score}</div>
+                    <div class="score-max">/ 100</div>
+                </div>
+                <div class="difficulty-info">
+                    <div class="difficulty-level">
+                        <span class="level-badge">${difficulty.level}</span>
+                        <span class="level-cn">${difficulty.levelCn}</span>
+                    </div>
+                    <div class="difficulty-audience bilingual">
+                        <span class="en">👥 ${difficulty.audience}</span>
+                        <span class="cn">${difficulty.audienceCn}</span>
+                    </div>
+                    <div class="difficulty-desc bilingual">
+                        <span class="en">${difficulty.description}</span>
+                        <span class="cn">${difficulty.descriptionCn}</span>
+                    </div>
+                </div>
+            </div>
+            <details class="difficulty-details">
+                <summary class="bilingual">
+                    <span class="en">📐 Calculation Details</span>
+                    <span class="cn">计算详情</span>
+                </summary>
+                <div class="detail-grid">
+                    <div class="detail-item">
+                        <span class="detail-label bilingual">
+                            <span class="en">Base Score</span>
+                            <span class="cn">基础难度分</span>
+                        </span>
+                        <span class="detail-value">${difficulty.details.baseScore}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label bilingual">
+                            <span class="en">Diversity</span>
+                            <span class="cn">词汇多样性</span>
+                        </span>
+                        <span class="detail-value">${difficulty.details.diversity} (×${difficulty.details.diversityFactor})</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label bilingual">
+                            <span class="en">Phrasal Verbs</span>
+                            <span class="cn">短语动词修正</span>
+                        </span>
+                        <span class="detail-value">×${difficulty.details.phrasalFactor}</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-label bilingual">
+                            <span class="en">Length Factor</span>
+                            <span class="cn">长度修正</span>
+                        </span>
+                        <span class="detail-value">×${difficulty.details.lengthFactor}</span>
+                    </div>
+                </div>
+            </details>
+        </div>
+
         <div class="cefr-distribution">
             <h4>CEFR Distribution</h4>
             <div class="cefr-guide">
@@ -341,20 +532,23 @@ function updateWordDisplay() {
     wordCount.textContent = filteredWords.length;
     phraseCount.textContent = filteredPhrases.length;
 
-    // CEFR level colors
+    // CEFR level colors - unified gradient from green (easiest) to purple (hardest)
     const cefrColors = {
-        'A1': '#4CAF50',
-        'A2': '#8BC34A',
-        'B1': '#FFC107',
-        'B2': '#FF9800',
-        'C1': '#FF5722',
-        'C2': '#F44336',
-        'C2+': '#9C27B0'
+        'A1': '#22c55e',   // Green
+        'A2': '#3b82f6',   // Blue
+        'B1': '#f59e0b',   // Amber
+        'B2': '#f97316',   // Orange
+        'C1': '#ef4444',   // Red
+        'C2': '#a855f7',   // Purple
+        'C2+': '#9333ea'   // Dark purple
     };
 
     // Render words (Feature 004: T008, T009 - Entire card clickable, no translate button)
     wordList.innerHTML = filteredWords.slice(0, 200).map(word => {
         const levelColor = cefrColors[word.level] || '#757575';
+        const phonetic = (word.phonetic && isValidPhonetic(word.phonetic, word.word))
+            ? `<div class="word-phonetic">/${word.phonetic}/</div>`
+            : '';
         return `
             <div class="word-item word-card"
                  data-word='${JSON.stringify(word)}'
@@ -362,6 +556,7 @@ function updateWordDisplay() {
                  role="button"
                  aria-label="View details for '${word.word}'">
                 <div class="word-text">${word.word}</div>
+                ${phonetic}
                 <div class="word-level cefr-badge" style="background-color: ${levelColor};">${word.level}</div>
             </div>
         `;
@@ -403,7 +598,13 @@ function updateWordDisplay() {
     // Feature 004: Translate button handlers removed - translation now auto-loads in modal
     // (Old inline translation functionality deprecated in favor of modal-based translation)
 
-    // Feature 004: Initialize tab navigation and keyboard controls after rendering
+    // Initialize main tab navigation (Overview/Vocabulary/Reading/Download)
+    if (!window.mainTabsInitialized) {
+        initMainTabNavigation();
+        window.mainTabsInitialized = true;
+    }
+
+    // Feature 004: Initialize sub-tab navigation and keyboard controls after rendering
     // Only initialize once per page load (check if tabs exist and haven't been initialized)
     const tabButtons = document.querySelectorAll('.tab-btn');
     if (tabButtons.length > 0 && !window.tabsInitialized) {
@@ -441,6 +642,43 @@ function updateWordDisplay() {
         btn.classList.add('active');
         btn.textContent = '✕';
     }
+}
+
+/**
+ * Validate phonetic transcription to filter out obvious errors
+ * @param {string} phonetic - Phonetic transcription to validate
+ * @param {string} word - The word being checked
+ * @returns {boolean} - True if phonetic appears valid
+ */
+function isValidPhonetic(phonetic, word) {
+    if (!phonetic || phonetic.trim().length === 0) {
+        return false;
+    }
+
+    // Filter out obviously wrong phonetics
+    // 1. Too short (less than 2 characters is suspicious)
+    if (phonetic.length < 2) {
+        return false;
+    }
+
+    // 2. Contains Chinese characters (indicates wrong dictionary match)
+    if (/[\u4e00-\u9fa5]/.test(phonetic)) {
+        return false;
+    }
+
+    // 3. Phonetic is completely different from word (length-based heuristic)
+    // If word is long but phonetic is very short, likely wrong
+    if (word.length > 5 && phonetic.length < 3) {
+        return false;
+    }
+
+    // 4. Common error patterns
+    // "nan" is a common error for proper nouns
+    if (phonetic.toLowerCase() === 'nan' && word.toLowerCase() !== 'nan') {
+        return false;
+    }
+
+    return true;
 }
 
 // Setup interactive filters (T039, T040)
@@ -485,6 +723,16 @@ function showWordDetails(wordData) {
             <div class="detail-value">${wordData.level}</div>
         </div>
     `;
+
+    // Add phonetic transcription if available and valid
+    if (wordData.phonetic && isValidPhonetic(wordData.phonetic, wordData.word)) {
+        detailsHTML += `
+            <div class="detail-row">
+                <div class="detail-label">Phonetic (音标)</div>
+                <div class="detail-value" style="font-family: 'Lucida Sans Unicode', 'Arial Unicode MS', sans-serif; font-style: italic;">/${wordData.phonetic}/</div>
+            </div>
+        `;
+    }
 
     if (wordData.definition_cn) {
         // Convert \n to <br> for proper line breaks
@@ -678,6 +926,38 @@ downloadMarkdownBtn.addEventListener('click', () => {
     downloadResult('markdown');
 });
 
+// TXT download handler with level filtering
+const downloadTxtBtn = document.getElementById('download-txt');
+if (downloadTxtBtn) {
+    downloadTxtBtn.addEventListener('click', () => {
+        downloadTxtWordList();
+    });
+}
+
+// Level checkbox logic
+const downloadLevelAll = document.getElementById('download-level-all');
+const levelCheckboxItems = document.querySelectorAll('.level-checkbox-item');
+
+if (downloadLevelAll) {
+    downloadLevelAll.addEventListener('change', (e) => {
+        // When "All Levels" is checked, uncheck all individual levels
+        if (e.target.checked) {
+            levelCheckboxItems.forEach(cb => {
+                cb.checked = false;
+            });
+        }
+    });
+}
+
+// When any individual level is checked, uncheck "All Levels"
+levelCheckboxItems.forEach(cb => {
+    cb.addEventListener('change', (e) => {
+        if (e.target.checked && downloadLevelAll) {
+            downloadLevelAll.checked = false;
+        }
+    });
+});
+
 // Download result in specified format
 function downloadResult(format) {
     if (!currentSessionId) {
@@ -687,6 +967,140 @@ function downloadResult(format) {
 
     // Trigger download by navigating to download URL
     window.location.href = `/download/${currentSessionId}/${format}`;
+}
+
+/**
+ * Download TXT word list with level filtering (auto-split into 500-word files)
+ */
+async function downloadTxtWordList() {
+    if (!window.currentAnalysisResults || !window.currentAnalysisResults.words) {
+        alert('No analysis results available / 没有可用的分析结果');
+        return;
+    }
+
+    // Get selected levels
+    const selectedLevels = getSelectedDownloadLevels();
+
+    if (selectedLevels.length === 0) {
+        alert('Please select at least one CEFR level / 请至少选择一个CEFR级别');
+        return;
+    }
+
+    // Filter words by selected levels
+    let filteredWords = window.currentAnalysisResults.words;
+
+    if (!selectedLevels.includes('all')) {
+        filteredWords = filteredWords.filter(word => selectedLevels.includes(word.level));
+    }
+
+    if (filteredWords.length === 0) {
+        alert('No words found for selected levels / 所选级别没有找到单词');
+        return;
+    }
+
+    // Extract all original forms (case-preserved)
+    const allWords = [];
+    filteredWords.forEach(word => {
+        if (word.original_forms && word.original_forms.length > 0) {
+            allWords.push(...word.original_forms);
+        } else {
+            allWords.push(word.word);
+        }
+    });
+
+    // Add phrasal verbs (filtered by level)
+    const phrasal_verbs = window.currentAnalysisResults.phrasal_verbs || [];
+    let filteredPhrases = phrasal_verbs;
+
+    if (!selectedLevels.includes('all')) {
+        filteredPhrases = phrasal_verbs.filter(pv => selectedLevels.includes(pv.level));
+    }
+
+    filteredPhrases.forEach(pv => {
+        allWords.push(pv.phrase);
+    });
+
+    // Remove duplicates while preserving case
+    const uniqueWords = [...new Set(allWords)];
+
+    // Split into chunks of 500 words
+    const chunkSize = 500;
+    const chunks = [];
+    for (let i = 0; i < uniqueWords.length; i += chunkSize) {
+        chunks.push(uniqueWords.slice(i, i + chunkSize));
+    }
+
+    // Generate base filename
+    const levelStr = selectedLevels.includes('all') ? 'all-levels' : selectedLevels.join('-');
+    const sourceName = window.currentAnalysisResults.source_file || 'vocabulary';
+    const baseFilename = `${sourceName.replace(/\.[^/.]+$/, '')}_${levelStr}_words`;
+
+    // Download each chunk
+    for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        const txtContent = chunk.join(', ');
+
+        // Create blob and download
+        const blob = new Blob([txtContent], { type: 'text/plain;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+
+        // Add part number if multiple files
+        if (chunks.length > 1) {
+            link.download = `${baseFilename}_part${i + 1}.txt`;
+        } else {
+            link.download = `${baseFilename}.txt`;
+        }
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        // Add delay between downloads to avoid browser blocking
+        if (i < chunks.length - 1) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+        }
+    }
+
+    // Show completion message
+    const totalWords = uniqueWords.length;
+    const fileCount = chunks.length;
+
+    if (fileCount > 1) {
+        alert(
+            `Downloaded ${totalWords} items (words + phrasal verbs) in ${fileCount} files (500 items each)\n` +
+            `已下载 ${totalWords} 个词条（单词 + 短语动词），共 ${fileCount} 个文件（每个500词条）`
+        );
+    } else {
+        alert(
+            `Downloaded ${totalWords} items (words + phrasal verbs)\n` +
+            `已下载 ${totalWords} 个词条（单词 + 短语动词）`
+        );
+    }
+}
+
+/**
+ * Get selected download levels
+ * @returns {Array<string>} Array of selected level codes
+ */
+function getSelectedDownloadLevels() {
+    const levels = [];
+
+    // Check if "All Levels" is selected
+    const allCheckbox = document.getElementById('download-level-all');
+    if (allCheckbox && allCheckbox.checked) {
+        return ['all'];
+    }
+
+    // Get individual selected levels
+    const checkboxes = document.querySelectorAll('.level-checkbox-item:checked');
+    checkboxes.forEach(cb => {
+        levels.push(cb.value);
+    });
+
+    return levels;
 }
 
 // Analyze another file
@@ -755,11 +1169,87 @@ function showSection(section) {
 }
 
 // ===================================================================
-// FEATURE 004: T018 - Tab Switching Logic
+// Main Tab Navigation (Overview/Vocabulary/Reading/Download)
 // ===================================================================
 
 /**
- * Initialize tab navigation system
+ * Initialize main tab navigation system
+ */
+function initMainTabNavigation() {
+    const mainTabButtons = document.querySelectorAll('.main-tab-btn');
+
+    mainTabButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetTab = btn.getAttribute('data-tab');
+            switchMainTab(targetTab);
+        });
+    });
+}
+
+/**
+ * Switch between main tabs
+ * @param {string} tabName - 'overview', 'vocabulary', 'reading', or 'download'
+ */
+function switchMainTab(tabName) {
+    const allTabs = document.querySelectorAll('.main-tab-btn');
+    const allPanels = document.querySelectorAll('.main-tab-panel');
+
+    // Find target elements
+    const targetButton = document.querySelector(`.main-tab-btn[data-tab="${tabName}"]`);
+    const targetPanel = document.getElementById(`${tabName}-panel`);
+
+    if (!targetButton || !targetPanel) {
+        console.error(`Main tab not found: ${tabName}`);
+        return;
+    }
+
+    // Update button states
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+    });
+    targetButton.classList.add('active');
+    targetButton.setAttribute('aria-selected', 'true');
+
+    // Update panel states
+    allPanels.forEach(panel => {
+        panel.classList.remove('active');
+        panel.setAttribute('hidden', '');
+    });
+    targetPanel.classList.add('active');
+    targetPanel.removeAttribute('hidden');
+
+    // If switching to reading view, make sure it's rendered
+    if (tabName === 'reading') {
+        console.log('[DEBUG] Switching to reading view');
+        console.log('[DEBUG] window.currentAnalysisResults:', !!window.currentAnalysisResults);
+
+        if (window.currentAnalysisResults) {
+            const readingContent = document.getElementById('reading-content');
+            console.log('[DEBUG] readingContent element:', !!readingContent);
+
+            if (readingContent) {
+                // Check if content is empty (ignore HTML comments, use textContent)
+                const hasContent = readingContent.textContent.trim().length > 0 || readingContent.children.length > 0;
+                console.log('[DEBUG] readingContent has actual content:', hasContent);
+
+                if (!hasContent) {
+                    console.log('[DEBUG] Calling parseTextForReading()');
+                    parseTextForReading(window.currentAnalysisResults.processed_text, window.currentAnalysisResults);
+                } else {
+                    console.log('[DEBUG] Reading content already rendered, skipping');
+                }
+            }
+        }
+    }
+}
+
+// ===================================================================
+// FEATURE 004: T018 - Sub-Tab Switching Logic (Words/Phrases)
+// ===================================================================
+
+/**
+ * Initialize sub-tab navigation system
  * Implements tab switching with fade transitions and ARIA attributes
  * Reference: tasks.md T018, spec.md FR-008
  */
@@ -1149,25 +1639,10 @@ function handleWordClick(word) {
 }
 
 /**
- * T013: Initialize reading view tab
+ * T013: Initialize reading view
+ * Note: Main tab switching is now handled by initMainTabNavigation() and switchMainTab()
  */
 function initReadingView() {
-    const readingTab = document.getElementById('reading-tab');
-
-    if (readingTab) {
-        readingTab.addEventListener('click', () => {
-            console.log('[DEBUG] Reading tab clicked');
-            console.log('[DEBUG] window.currentAnalysisResults exists:', !!window.currentAnalysisResults);
-            console.log('[DEBUG] Has processed_text:', window.currentAnalysisResults && 'processed_text' in window.currentAnalysisResults);
-
-            if (window.currentAnalysisResults && window.currentAnalysisResults.processed_text) {
-                parseTextForReading(window.currentAnalysisResults.processed_text, window.currentAnalysisResults);
-            } else {
-                console.warn('[DEBUG] Cannot render reading view - missing data');
-            }
-        });
-    }
-
     // T020: Add Escape key listener for modal (Feature 005 enhancement)
     document.addEventListener('keydown', (e) => {
         if (e.key === 'Escape') {
@@ -1177,4 +1652,120 @@ function initReadingView() {
             }
         }
     });
+}
+
+// ========================================
+// Text Input Mode Functionality
+// ========================================
+
+/**
+ * Switch between file upload and text input modes
+ */
+function switchInputMode(mode) {
+    const fileForm = document.getElementById('upload-form');
+    const textForm = document.getElementById('text-form');
+    const fileModeBtn = document.getElementById('file-mode-btn');
+    const textModeBtn = document.getElementById('text-mode-btn');
+
+    if (mode === 'file') {
+        // Show file upload, hide text input
+        fileForm.classList.add('active');
+        textForm.classList.remove('active');
+        fileModeBtn.classList.add('active');
+        textModeBtn.classList.remove('active');
+    } else if (mode === 'text') {
+        // Show text input, hide file upload
+        fileForm.classList.remove('active');
+        textForm.classList.add('active');
+        fileModeBtn.classList.remove('active');
+        textModeBtn.classList.add('active');
+    }
+}
+
+/**
+ * Update character count for text input
+ */
+function updateCharCount() {
+    const text = textInput.value;
+    const count = text.length;
+    charCount.textContent = count.toLocaleString();
+
+    // Optional: warn when approaching limit
+    if (count > 900000) {
+        charCount.style.color = 'var(--error-color, #ef4444)';
+    } else {
+        charCount.style.color = 'var(--text-primary)';
+    }
+}
+
+/**
+ * Handle text form submission
+ */
+async function handleTextSubmit(e) {
+    e.preventDefault();
+
+    const text = textInput.value.trim();
+
+    if (!text) {
+        showError('Please enter some text to analyze / 请输入要分析的文本');
+        return;
+    }
+
+    if (text.length < 50) {
+        showError('Text is too short (minimum 50 characters) / 文本太短（最少50个字符）');
+        return;
+    }
+
+    try {
+        // Show progress section
+        showSection('progress');
+
+        // Send text to backend
+        const response = await fetch('/analyze-text', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                text: text,
+                source_name: 'Pasted Text'
+            })
+        });
+
+        if (!response.ok) {
+            const error = await response.json();
+            throw new Error(error.message || 'Analysis failed');
+        }
+
+        const data = await response.json();
+        currentSessionId = data.session_id;
+
+        // Start listening for progress updates
+        listenForProgress(currentSessionId);
+
+    } catch (error) {
+        console.error('Error analyzing text:', error);
+        showError(error.message || 'Failed to analyze text / 文本分析失败');
+    }
+}
+
+// Event Listeners for Text Input Mode
+
+// Mode toggle buttons
+if (fileModeBtn) {
+    fileModeBtn.addEventListener('click', () => switchInputMode('file'));
+}
+
+if (textModeBtn) {
+    textModeBtn.addEventListener('click', () => switchInputMode('text'));
+}
+
+// Character count
+if (textInput) {
+    textInput.addEventListener('input', updateCharCount);
+}
+
+// Text form submission
+if (textForm) {
+    textForm.addEventListener('submit', handleTextSubmit);
 }
