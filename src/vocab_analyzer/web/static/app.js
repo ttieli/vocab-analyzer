@@ -1018,17 +1018,28 @@ function parseTextForReading(processedText, analysisResults) {
     const activeLevel = document.querySelector('.filter-btn.active')?.getAttribute('data-level') || 'all';
     const searchTerm = document.getElementById('word-search')?.value.toLowerCase() || '';
 
-    // Split text into paragraphs
-    const paragraphs = processedText.split('\n\n').filter(p => p.trim().length > 0);
+    // Split text into paragraphs with improved logic
+    // Try double newline first, then fall back to single newline if no double newlines found
+    let paragraphs = processedText.split('\n\n').filter(p => p.trim().length > 0);
+
+    // If no double-newline paragraphs, try single newline
+    if (paragraphs.length <= 1) {
+        paragraphs = processedText.split('\n').filter(p => p.trim().length > 0);
+    }
 
     // Process each paragraph
     let html = '';
 
-    paragraphs.forEach(para => {
+    paragraphs.forEach((para, index) => {
+        // Skip very short lines (likely titles or page numbers)
+        if (para.trim().length < 3) {
+            return;
+        }
+
         // Split paragraph into tokens (words and punctuation)
         const tokens = para.split(/(\s+|[.,;:!?—\-\[\](){}'""])/);
 
-        let paraHTML = '<p>';
+        let paraHTML = '<p class="reading-paragraph">';
 
         tokens.forEach(token => {
             if (!token || token.trim().length === 0) {
