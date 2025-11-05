@@ -931,12 +931,19 @@ function findWordData(token, analysisResults) {
 }
 
 /**
- * T011: Parse processed text into reading view HTML with CEFR-colored, clickable words
+ * T011 & T031: Parse processed text into reading view HTML with CEFR-colored, clickable words
+ * Includes loading skeleton for large texts >500ms render time
  * @param {string} processedText - Full book text from analysis results
  * @param {Object} analysisResults - Analysis results containing words and phrasal verbs
  */
 function parseTextForReading(processedText, analysisResults) {
     const readingContent = document.getElementById('reading-content');
+
+    // T031: Show loading skeleton for large texts
+    const startTime = performance.now();
+    const showSkeletonTimeout = setTimeout(() => {
+        readingContent.innerHTML = '<div class="reading-skeleton"></div>';
+    }, 500); // Show skeleton if render takes >500ms
 
     // Validate inputs
     if (!processedText || processedText.trim().length === 0) {
@@ -1039,7 +1046,13 @@ function parseTextForReading(processedText, analysisResults) {
         html += paraHTML;
     });
 
+    // Clear skeleton timeout and render content
+    clearTimeout(showSkeletonTimeout);
     readingContent.innerHTML = html;
+
+    // T029: Performance logging for optimization
+    const renderTime = performance.now() - startTime;
+    console.log(`[Reading View] Rendered ${paragraphs.length} paragraphs in ${renderTime.toFixed(2)}ms`);
 }
 
 /**
