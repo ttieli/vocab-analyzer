@@ -337,95 +337,66 @@ function updateWordDisplay() {
         'C2+': '#9C27B0'
     };
 
-    // Render words
+    // Render words (Feature 004: T008, T009 - Entire card clickable, no translate button)
     wordList.innerHTML = filteredWords.slice(0, 200).map(word => {
         const levelColor = cefrColors[word.level] || '#757575';
         return `
-            <div class="word-item" data-word='${JSON.stringify(word)}'>
-                <button class="translate-btn" title="Translate / 翻译">翻</button>
+            <div class="word-item word-card"
+                 data-word='${JSON.stringify(word)}'
+                 tabindex="0"
+                 role="button"
+                 aria-label="View details for '${word.word}'">
                 <div class="word-text">${word.word}</div>
-                <div class="word-level" style="background-color: ${levelColor};">${word.level}</div>
+                <div class="word-level cefr-badge" style="background-color: ${levelColor};">${word.level}</div>
             </div>
         `;
     }).join('');
 
-    // Render phrases
+    // Render phrases (Feature 004: T008, T009 - Entire card clickable, no translate button)
     phraseList.innerHTML = filteredPhrases.slice(0, 100).map(phrase => {
         const levelColor = cefrColors[phrase.level] || '#757575';
         return `
-            <div class="word-item" data-word='${JSON.stringify(phrase)}'>
-                <button class="translate-btn" title="Translate / 翻译">翻</button>
+            <div class="word-item word-card"
+                 data-word='${JSON.stringify(phrase)}'
+                 tabindex="0"
+                 role="button"
+                 aria-label="View details for '${phrase.phrase}'">
                 <div class="word-text">${phrase.phrase}</div>
-                <div class="word-level" style="background-color: ${levelColor};">${phrase.level}</div>
+                <div class="word-level cefr-badge" style="background-color: ${levelColor};">${phrase.level}</div>
             </div>
         `;
     }).join('');
 
-    // Add click handlers for word details
+    // Add click handlers for word details (Feature 004: T011 - Entire card clickable)
     document.querySelectorAll('.word-item').forEach(item => {
-        // Click on word item (not on translate button) to show details
+        // Click handler for entire card
         item.addEventListener('click', (e) => {
-            // Ignore clicks on translate button
-            if (e.target.classList.contains('translate-btn')) {
-                return;
-            }
             const wordData = JSON.parse(item.getAttribute('data-word'));
             showWordDetails(wordData);
         });
-    });
 
-    // Add translate button handlers
-    document.querySelectorAll('.translate-btn').forEach(btn => {
-        btn.addEventListener('click', async (e) => {
-            e.stopPropagation(); // Prevent triggering word detail modal
-
-            const wordItem = btn.closest('.word-item');
-            const wordData = JSON.parse(wordItem.getAttribute('data-word'));
-            const text = wordData.word || wordData.phrase;
-            const type = wordData.phrase ? 'phrase' : 'word';
-
-            // Check if translation is already displayed
-            let translationDiv = wordItem.querySelector('.translation-result');
-            if (translationDiv) {
-                // Toggle visibility
-                translationDiv.remove();
-                btn.textContent = '翻';
-                btn.classList.remove('active');
-                return;
-            }
-
-            // Check if already has translation in data
-            if (wordData.definition_cn) {
-                showInlineTranslation(wordItem, btn, {
-                    translation: wordData.definition_cn,
-                    source: 'cached',
-                    cached: true
-                });
-                return;
-            }
-
-            // Show loading state
-            btn.classList.add('loading');
-            btn.disabled = true;
-            btn.textContent = '...';
-
-            try {
-                if (typeof translateText === 'function') {
-                    const result = await translateText(text, type);
-                    showInlineTranslation(wordItem, btn, result);
-                } else {
-                    console.error('translateText function not found');
-                    alert('翻译功能未加载');
-                }
-            } catch (error) {
-                alert('翻译失败: ' + error.message);
-            } finally {
-                btn.classList.remove('loading');
-                btn.disabled = false;
-                btn.textContent = '翻';
+        // Keyboard accessibility: Enter/Space keys
+        item.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                const wordData = JSON.parse(item.getAttribute('data-word'));
+                showWordDetails(wordData);
             }
         });
     });
+
+    // Feature 004: Translate button handlers removed - translation now auto-loads in modal
+    // (Old inline translation functionality deprecated in favor of modal-based translation)
+
+    // Feature 004: Initialize tab navigation and keyboard controls after rendering
+    // Only initialize once per page load (check if tabs exist and haven't been initialized)
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    if (tabButtons.length > 0 && !window.tabsInitialized) {
+        initTabNavigation();
+        restoreTabState();
+        initKeyboardNavigation();
+        window.tabsInitialized = true;
+    }
 
     // Helper function to show inline translation
     function showInlineTranslation(wordItem, btn, result) {
@@ -512,7 +483,12 @@ function showWordDetails(wordData) {
     }
 
     if (wordData.examples && wordData.examples.length > 0) {
-        const examples = wordData.examples.slice(0, 3).map((ex, index) => `
+        // Sort examples by length (shortest first) and take 3-5 shortest
+        const sortedExamples = [...wordData.examples]
+            .sort((a, b) => a.length - b.length)
+            .slice(0, Math.min(5, wordData.examples.length));
+
+        const examples = sortedExamples.map((ex, index) => `
             <li class="example-item" data-example-index="${index}">
                 <div class="example-text">${ex}</div>
                 <button class="example-translate-btn" data-text="${ex.replace(/"/g, '&quot;')}" title="Translate sentence / 翻译句子">翻</button>
@@ -532,6 +508,68 @@ function showWordDetails(wordData) {
     }
 
     modalDetails.innerHTML = detailsHTML;
+
+    // Feature 004: T014 - Auto-load Chinese translation on modal open
+    if (!wordData.definition_cn && typeof translateText === 'function') {
+        // Create translation section with skeleton loading
+        const translationRow = document.createElement('div');
+        translationRow.className = 'detail-row';
+        translationRow.id = 'auto-translation-row';
+        translationRow.innerHTML = `
+            <div class="detail-label">Chinese Translation (中文释义)</div>
+            <div class="detail-value">
+                <div class="translation-skeleton">
+                    <div class="skeleton-line" style="width: 90%;"></div>
+                    <div class="skeleton-line" style="width: 75%;"></div>
+                    <div class="skeleton-line" style="width: 85%;"></div>
+                    <div class="loading-text">加载中...</div>
+                </div>
+            </div>
+        `;
+
+        // Insert after CEFR level row
+        const firstRow = modalDetails.querySelector('.detail-row');
+        if (firstRow && firstRow.nextSibling) {
+            modalDetails.insertBefore(translationRow, firstRow.nextSibling);
+        } else {
+            modalDetails.insertBefore(translationRow, modalDetails.firstChild);
+        }
+
+        // Fetch translation
+        const wordText = wordData.word || wordData.phrase;
+        const translationType = wordData.word ? 'word' : 'phrase';
+
+        translateText(wordText, translationType)
+            .then(result => {
+                const translationValue = translationRow.querySelector('.detail-value');
+                const translation = result.translation || result.target_text || '翻译失败';
+                const source = result.source || 'Argos';
+                const cached = result.cached ? '<span class="translation-cached-label">缓存</span>' : '';
+
+                translationValue.innerHTML = `
+                    <div style="white-space: normal;">${translation}</div>
+                    <div class="translation-meta" style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">
+                        <span>来源: ${source}</span>
+                        ${cached}
+                    </div>
+                `;
+            })
+            .catch(error => {
+                const translationValue = translationRow.querySelector('.detail-value');
+                translationValue.innerHTML = `
+                    <div class="translation-error" style="color: var(--error-color, #dc2626);">
+                        暂时无法获取释义
+                    </div>
+                    <button class="retry-translation-btn" onclick="location.reload()"
+                            style="margin-top: 8px; padding: 6px 12px; font-size: 12px;
+                                   background: var(--primary-color); color: white;
+                                   border: none; border-radius: 4px; cursor: pointer;">
+                        重试
+                    </button>
+                `;
+                console.error('Auto-translation error:', error);
+            });
+    }
 
     // Add event listeners for example sentence translation buttons
     document.querySelectorAll('.example-translate-btn').forEach(btn => {
@@ -690,4 +728,165 @@ function hideAllSections() {
 
 function showSection(section) {
     section.classList.remove('hidden');
+}
+
+// ===================================================================
+// FEATURE 004: T018 - Tab Switching Logic
+// ===================================================================
+
+/**
+ * Initialize tab navigation system
+ * Implements tab switching with fade transitions and ARIA attributes
+ * Reference: tasks.md T018, spec.md FR-008
+ */
+function initTabNavigation() {
+    const tabButtons = document.querySelectorAll('.tab-btn');
+    const tabPanels = document.querySelectorAll('.tab-panel');
+
+    tabButtons.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            const targetTab = btn.getAttribute('data-tab');
+            switchTab(targetTab);
+        });
+    });
+}
+
+/**
+ * Switch between word and phrase tabs
+ * @param {string} tabName - 'words' or 'phrases'
+ */
+function switchTab(tabName) {
+    const allTabs = document.querySelectorAll('.tab-btn');
+    const allPanels = document.querySelectorAll('.tab-panel');
+
+    // Find target elements
+    const targetButton = document.querySelector(`[data-tab="${tabName}"]`);
+    const targetPanel = document.getElementById(`${tabName}-panel`);
+
+    if (!targetButton || !targetPanel) {
+        console.error(`Tab not found: ${tabName}`);
+        return;
+    }
+
+    // Update button states
+    allTabs.forEach(tab => {
+        tab.classList.remove('active');
+        tab.setAttribute('aria-selected', 'false');
+    });
+    targetButton.classList.add('active');
+    targetButton.setAttribute('aria-selected', 'true');
+
+    // Fade out current panel, then fade in target panel
+    const currentPanel = document.querySelector('.tab-panel.active');
+
+    if (currentPanel && currentPanel !== targetPanel) {
+        // Fade out current (CSS animation will handle this)
+        currentPanel.classList.remove('active');
+        currentPanel.setAttribute('hidden', '');
+
+        // Delay fade in for smooth transition (100ms fade out + 200ms fade in)
+        setTimeout(() => {
+            targetPanel.removeAttribute('hidden');
+            targetPanel.classList.add('active');
+        }, 100);
+    } else {
+        // First load or same tab
+        targetPanel.removeAttribute('hidden');
+        targetPanel.classList.add('active');
+    }
+
+    // Save tab state to localStorage (T019)
+    try {
+        localStorage.setItem('activeTab', tabName);
+    } catch (e) {
+        console.warn('localStorage not available:', e);
+    }
+}
+
+/**
+ * Restore tab state from localStorage on page load (T019)
+ */
+function restoreTabState() {
+    try {
+        const savedTab = localStorage.getItem('activeTab');
+        if (savedTab && (savedTab === 'words' || savedTab === 'phrases')) {
+            switchTab(savedTab);
+        }
+    } catch (e) {
+        console.warn('Could not restore tab state:', e);
+    }
+}
+
+// ===================================================================
+// FEATURE 004: T028, T029 - Keyboard Navigation
+// ===================================================================
+
+/**
+ * Initialize keyboard navigation for accessibility
+ * Implements arrow key tab switching and Escape key modal closing
+ * Reference: tasks.md T028, T029, WCAG 2.1 AA
+ */
+function initKeyboardNavigation() {
+    // T028: Arrow key navigation for tabs
+    const tabButtons = document.querySelectorAll('.tab-btn');
+
+    tabButtons.forEach((btn, index) => {
+        btn.addEventListener('keydown', (e) => {
+            let targetIndex = -1;
+
+            if (e.key === 'ArrowLeft' || e.key === 'Left') {
+                // Focus previous tab (wrap to last if at first)
+                e.preventDefault();
+                targetIndex = index === 0 ? tabButtons.length - 1 : index - 1;
+            } else if (e.key === 'ArrowRight' || e.key === 'Right') {
+                // Focus next tab (wrap to first if at last)
+                e.preventDefault();
+                targetIndex = index === tabButtons.length - 1 ? 0 : index + 1;
+            }
+
+            if (targetIndex >= 0) {
+                const targetTab = tabButtons[targetIndex];
+                targetTab.focus();
+                // Auto-activate tab on arrow key navigation
+                const tabName = targetTab.getAttribute('data-tab');
+                switchTab(tabName);
+            }
+        });
+    });
+
+    // T029: Escape key closes modal
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' || e.key === 'Esc') {
+            const modal = document.getElementById('word-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                e.preventDefault();
+                closeModalWithFocusReturn();
+            }
+        }
+    });
+}
+
+/**
+ * Close modal and return focus to triggering element
+ * Part of T029 - keyboard accessibility
+ */
+let lastFocusedElement = null;
+
+// Store focused element before opening modal
+const originalShowWordDetails = showWordDetails;
+window.showWordDetails = function(wordData) {
+    lastFocusedElement = document.activeElement;
+    originalShowWordDetails(wordData);
+};
+
+function closeModalWithFocusReturn() {
+    const modal = document.getElementById('word-modal');
+    modal.classList.add('hidden');
+
+    // Return focus to the element that triggered the modal
+    if (lastFocusedElement && typeof lastFocusedElement.focus === 'function') {
+        setTimeout(() => {
+            lastFocusedElement.focus();
+        }, 100);
+    }
 }
