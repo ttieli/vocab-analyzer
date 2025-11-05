@@ -25,27 +25,14 @@ A powerful CLI tool that analyzes English books and generates vocabulary lists o
 - **High Performance**: Process 100-page books in under 60 seconds
 - **Beautiful CLI**: Rich terminal interface with progress bars and colored output
 
-### 🚧 In Development: Bilingual UI & Translation (Feature 002)
+### 🌐 Bilingual UI & Translation
 
-**Status**: Phase 2 Complete - Foundation Ready (28% overall)
-
-New translation capabilities being added:
+New translation capabilities have been added:
 - **Bilingual Interface**: Simultaneous English/Chinese UI display
 - **Offline Translation**: Three-tier translation (ECDICT → Mdict → Argos Translate)
 - **CEFR Education**: Interactive level descriptions and learning guidance
 - **Translation Caching**: Persistent cache for improved performance
 - **Configurable**: YAML-based configuration for all translation settings
-
-**Completed Infrastructure** (✅ Ready for integration):
-- Translation cache with 30-day expiration
-- Argos Translate integration with lazy loading
-- Mdict dictionary support (.mdx files)
-- Translation fallback chain with confidence scoring
-- Bilingual string loader for UI localization
-
-**Next Milestone**: Web UI integration (Phase 3)
-
-📝 See [Feature 002 Progress](./specs/002-bilingual-ui-translation/PROGRESS.md) for details
 
 ### 📦 Installation
 
@@ -301,59 +288,37 @@ Input File
 
 ```
 vocab-analyzer/
-├── src/vocab_analyzer/          # Source code (3,930 lines)
+├── src/vocab_analyzer/          # Source code
 │   ├── models/                  # Data models
-│   │   ├── word.py             # Word dataclass (126 lines)
-│   │   ├── phrase.py           # Phrase dataclass (150 lines)
-│   │   └── analysis.py         # VocabularyAnalysis (267 lines)
-│   ├── extractors/              # Text extraction (374 lines)
-│   │   ├── base.py             # BaseExtractor abstract class
-│   │   ├── txt_extractor.py    # TXT file support
-│   │   ├── pdf_extractor.py    # PDF file support
-│   │   ├── docx_extractor.py   # DOCX file support
-│   │   └── json_extractor.py   # JSON file support
-│   ├── processors/              # NLP processing (530 lines)
-│   │   ├── tokenizer.py        # Tokenization & lemmatization
-│   │   └── phrase_detector.py  # Phrasal verb detection
-│   ├── matchers/                # Level matching (416 lines)
-│   │   └── level_matcher.py    # CEFR classification
-│   ├── analyzers/               # Statistics (254 lines)
-│   │   └── statistics.py       # Statistical analysis
-│   ├── exporters/               # Output formats (483 lines)
-│   │   ├── json_exporter.py    # JSON export
-│   │   ├── csv_exporter.py     # CSV export
-│   │   └── markdown_exporter.py# Markdown export
-│   ├── core/                    # Core logic (549 lines)
-│   │   ├── analyzer.py         # VocabularyAnalyzer facade
-│   │   └── config.py           # Configuration management
-│   ├── cli/                     # CLI interface (231 lines)
-│   │   └── main.py             # Click-based CLI
-│   └── utils/                   # Utilities (550 lines)
-│       ├── file_utils.py       # File operations
-│       ├── text_utils.py       # Text processing
-│       └── cache.py            # Caching utilities
-├── data/                        # Data resources (~205MB)
+│   ├── extractors/              # Text extraction
+│   ├── processors/              # NLP processing
+│   ├── matchers/                # Level matching
+│   ├── analyzers/               # Statistics
+│   ├── exporters/               # Output formats
+│   ├── core/                    # Core logic
+│   ├── cli/                     # CLI interface
+│   ├── web/                     # Web interface
+│   ├── translation/             # Translation components
+│   └── utils/                   # Utilities
+├── data/                        # Data resources
 │   ├── vocabularies/            # CEFR wordlists
-│   │   └── cefr_wordlist.csv   # 43,699 classified words
 │   ├── phrases/                 # Phrasal verbs
-│   │   └── phrasal_verbs.csv   # 124 common verbs
 │   ├── dictionaries/            # Dictionaries
-│   │   └── ECDICT/             # 770,608 word entries
-│   ├── sample_books/            # Sample texts (3 books)
+│   ├── sample_books/            # Sample texts
 │   └── mappings/                # CEFR-IELTS mapping
-├── tests/                       # Test suite (165 lines)
+├── tests/                       # Test suite
 │   ├── conftest.py             # Test fixtures
 │   ├── unit/                   # Unit tests
 │   └── integration/            # Integration tests
-├── scripts/                     # Utility scripts (400+ lines)
+├── scripts/                     # Utility scripts
 │   ├── prepare_data.py         # Data preparation
 │   └── validate_data.py        # Data validation
 ├── config/                      # Configuration
 │   └── default_config.yaml     # Default settings
-├── docs/                        # Documentation (107KB+)
-│   ├── USER_GUIDE.md           # User guide (15KB)
-│   ├── EXAMPLES.md             # Examples (16KB)
-│   └── QUICK_REFERENCE.md      # Quick reference (5.6KB)
+├── docs/                        # Documentation
+│   ├── USER_GUIDE.md           # User guide
+│   ├── EXAMPLES.md             # Examples
+│   └── QUICK_REFERENCE.md      # Quick reference
 ├── requirements.txt             # Dependencies
 ├── setup.py                     # Package setup
 └── README.md                    # This file
@@ -451,12 +416,12 @@ vocab-analyzer analyze book.txt --config my_config.yaml
 - [x] Multiple export formats (JSON, CSV, Markdown)
 - [x] CLI with rich formatting
 - [x] Comprehensive statistics
+- [x] Web interface (Flask/FastAPI)
 
 #### 🔄 Phase 2: Enhancements (Planned)
 - [ ] Expand phrasal verb dictionary (500+ verbs)
 - [ ] Advanced example sentence extraction
 - [ ] Anki deck export format
-- [ ] Web interface (Flask/FastAPI)
 - [ ] Batch processing mode
 
 #### 🚀 Phase 3: Advanced Features (Future)

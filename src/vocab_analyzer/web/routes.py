@@ -114,6 +114,84 @@ def upload_file():
     }), 200
 
 
+@web_bp.route('/analyze-text', methods=['POST'])
+def analyze_text():
+    """Handle text input and initiate analysis.
+
+    Request Body:
+        text: Raw text content to analyze (required)
+        source_name: Optional name for the text source (default: "pasted_text")
+
+    Returns:
+        JSON response with session ID and source name, or error message
+    """
+    # Get JSON data
+    data = request.get_json()
+
+    if not data:
+        return jsonify({
+            "error": "NO_DATA",
+            "message": "No JSON data provided"
+        }), 400
+
+    # Get text content
+    text = data.get('text', '').strip()
+
+    if not text:
+        return jsonify({
+            "error": "NO_TEXT",
+            "message": "No text content provided"
+        }), 400
+
+    # Check text length (max 1MB of text = ~1,000,000 chars)
+    if len(text) > 1_000_000:
+        return jsonify({
+            "error": "TEXT_TOO_LONG",
+            "message": "Text content exceeds 1,000,000 characters"
+        }), 400
+
+    # Get source name
+    source_name = data.get('source_name', 'pasted_text')
+
+    # Save text to temporary file
+    import tempfile
+    temp_file = tempfile.NamedTemporaryFile(
+        mode='w',
+        suffix='.txt',
+        delete=False,
+        encoding='utf-8'
+    )
+    temp_file.write(text)
+    temp_file.close()
+
+    file_path = Path(temp_file.name)
+
+    # Create uploaded file object
+    uploaded_file = UploadedFile(
+        filename=source_name,
+        file_path=file_path,
+        file_type='.txt',
+        size_bytes=len(text.encode('utf-8'))
+    )
+
+    # Create session
+    session = create_session(uploaded_file)
+
+    # Start analysis in background thread
+    thread = threading.Thread(
+        target=analyze_file_background,
+        args=(session.session_id,)
+    )
+    thread.daemon = True
+    thread.start()
+
+    return jsonify({
+        "session_id": str(session.session_id),
+        "source_name": source_name,
+        "status": "processing"
+    }), 200
+
+
 @web_bp.route('/progress/<session_id>', methods=['GET'])
 def progress_stream(session_id: str):
     """Stream real-time progress updates via Server-Sent Events.
