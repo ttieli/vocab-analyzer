@@ -156,7 +156,10 @@ class VocabularyAnalyzer:
         Returns:
             VocabularyAnalysis object
         """
-        analysis = VocabularyAnalysis(source_file=file_path)
+        analysis = VocabularyAnalysis(
+            source_file=file_path,
+            processed_text=full_text
+        )
 
         # Group tokens by lemma
         word_data = {}

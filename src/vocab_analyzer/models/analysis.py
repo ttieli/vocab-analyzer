@@ -21,6 +21,7 @@ class VocabularyAnalysis:
         statistics: Dictionary containing analysis statistics
         metadata: Additional metadata about the analysis
         analysis_date: Timestamp of when analysis was performed
+        processed_text: Full text content (for reading view in web interface)
     """
 
     source_file: str
@@ -29,6 +30,7 @@ class VocabularyAnalysis:
     statistics: Dict[str, any] = field(default_factory=dict)
     metadata: Dict[str, any] = field(default_factory=dict)
     analysis_date: Optional[datetime] = None
+    processed_text: Optional[str] = None
 
     def __post_init__(self) -> None:
         """Initialize analysis date if not provided."""
@@ -206,6 +208,7 @@ class VocabularyAnalysis:
             "analysis_date": self.analysis_date.isoformat() if self.analysis_date else None,
             "statistics": self.statistics,
             "metadata": self.metadata,
+            "processed_text": self.processed_text,
         }
 
         if include_words:
