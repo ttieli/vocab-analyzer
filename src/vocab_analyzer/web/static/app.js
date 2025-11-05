@@ -284,6 +284,12 @@ function displayStatistics(results) {
         </div>
         <div class="cefr-distribution">
             <h4>CEFR Distribution</h4>
+            <div class="cefr-guide">
+                <div class="cefr-guide-item"><strong>A1-A2</strong>: Basic user (beginner) | 基础水平</div>
+                <div class="cefr-guide-item"><strong>B1-B2</strong>: Independent user (intermediate) | 独立运用</div>
+                <div class="cefr-guide-item"><strong>C1-C2</strong>: Proficient user (advanced) | 熟练运用</div>
+                <div class="cefr-guide-item"><strong>C2+</strong>: Beyond CEFR (specialized) | 超出CEFR（专业词汇）</div>
+            </div>
             ${distributionHTML}
         </div>
     `;
