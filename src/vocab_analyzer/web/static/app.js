@@ -1769,3 +1769,268 @@ if (textInput) {
 if (textForm) {
     textForm.addEventListener('submit', handleTextSubmit);
 }
+
+// ========================================
+// History Functionality
+// ========================================
+
+/**
+ * Open history modal and load history entries
+ */
+async function openHistoryModal() {
+    const historyModal = document.getElementById('history-modal');
+    const historyList = document.getElementById('history-list');
+
+    if (!historyModal || !historyList) {
+        console.error('History modal elements not found');
+        return;
+    }
+
+    // Show modal
+    historyModal.classList.remove('hidden');
+
+    // Show loading state
+    historyList.innerHTML = '<div class="history-loading bilingual"><span class="en">Loading history...</span><span class="cn">加载历史记录中...</span></div>';
+
+    try {
+        // Fetch history from API
+        const response = await fetch('/api/history');
+        if (!response.ok) {
+            throw new Error('Failed to load history');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load history');
+        }
+
+        // Display history entries
+        displayHistoryEntries(data.entries);
+
+    } catch (error) {
+        console.error('Error loading history:', error);
+        historyList.innerHTML = `
+            <div class="history-error bilingual">
+                <span class="en">❌ Failed to load history</span>
+                <span class="cn">加载历史记录失败</span>
+            </div>
+        `;
+    }
+}
+
+/**
+ * Display history entries in the modal
+ */
+function displayHistoryEntries(entries) {
+    const historyList = document.getElementById('history-list');
+
+    if (!entries || entries.length === 0) {
+        historyList.innerHTML = `
+            <div class="history-empty bilingual">
+                <span class="en">📭 No analysis history yet</span>
+                <span class="cn">暂无分析历史</span>
+            </div>
+        `;
+        return;
+    }
+
+    // Create history items HTML
+    let html = '';
+    entries.forEach((entry) => {
+        const date = new Date(entry.timestamp);
+        const dateStr = date.toLocaleString();
+        const dateStrCn = date.toLocaleString('zh-CN');
+
+        html += `
+            <div class="history-item" data-id="${entry.id}">
+                <div class="history-item-header">
+                    <div class="history-item-title">
+                        <span class="history-item-id">#${entry.id}</span>
+                        <span class="history-item-filename">${escapeHtml(entry.filename)}</span>
+                    </div>
+                    <button class="history-item-delete" data-id="${entry.id}" title="Delete / 删除">
+                        🗑️
+                    </button>
+                </div>
+                <div class="history-item-info">
+                    <div class="history-item-date bilingual">
+                        <span class="en">📅 ${dateStr}</span>
+                        <span class="cn">${dateStrCn}</span>
+                    </div>
+                    <div class="history-item-stats bilingual">
+                        <span class="en">📊 ${entry.total_unique_words.toLocaleString()} unique words (${entry.total_words.toLocaleString()} total)</span>
+                        <span class="cn">${entry.total_unique_words.toLocaleString()} 个不同单词（共 ${entry.total_words.toLocaleString()} 个）</span>
+                    </div>
+                </div>
+                <button class="history-item-load btn btn-primary bilingual" data-id="${entry.id}">
+                    <span class="en">📂 Load Analysis</span>
+                    <span class="cn">加载分析</span>
+                </button>
+            </div>
+        `;
+    });
+
+    historyList.innerHTML = html;
+
+    // Add event listeners for load buttons
+    historyList.querySelectorAll('.history-item-load').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+            const analysisId = parseInt(e.currentTarget.getAttribute('data-id'));
+            await loadHistoryAnalysis(analysisId);
+        });
+    });
+
+    // Add event listeners for delete buttons
+    historyList.querySelectorAll('.history-item-delete').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+            e.stopPropagation();
+            const analysisId = parseInt(e.currentTarget.getAttribute('data-id'));
+            await deleteHistoryAnalysis(analysisId);
+        });
+    });
+}
+
+/**
+ * Load a specific analysis from history
+ */
+async function loadHistoryAnalysis(analysisId) {
+    const historyModal = document.getElementById('history-modal');
+
+    try {
+        // Show loading state
+        showSection('progress');
+        closeHistoryModal();
+        updateProgress(0, 'Loading analysis from history... / 从历史记录加载分析...');
+
+        // Fetch analysis from API
+        const response = await fetch(`/api/history/${analysisId}`);
+        if (!response.ok) {
+            throw new Error('Failed to load analysis');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to load analysis');
+        }
+
+        // Process and display the analysis
+        const analysis = data.analysis;
+
+        // Convert the stored analysis format to match the expected format
+        const processedAnalysis = {
+            words: analysis.words,
+            phrases: analysis.phrases,
+            statistics: analysis.statistics,
+            processed_text: analysis.processed_text,
+            source_file: analysis.source_file || analysis.filename,
+            analysis_date: analysis.analysis_date || analysis.timestamp
+        };
+
+        // Store in global state
+        window.currentAnalysisResults = processedAnalysis;
+        analysisResults = processedAnalysis;
+
+        // Update progress to complete
+        updateProgress(100, 'Analysis loaded / 分析已加载');
+
+        // Display results
+        setTimeout(() => {
+            displayAnalysisResults(processedAnalysis);
+            showSection('results');
+        }, 500);
+
+    } catch (error) {
+        console.error('Error loading analysis:', error);
+        showError(`Failed to load analysis: ${error.message} / 加载分析失败`);
+    }
+}
+
+/**
+ * Delete a specific analysis from history
+ */
+async function deleteHistoryAnalysis(analysisId) {
+    // Confirm deletion
+    const confirmMessage = getCurrentLanguage() === 'en'
+        ? 'Are you sure you want to delete this analysis?'
+        : '确定要删除此分析记录吗？';
+
+    if (!confirm(confirmMessage)) {
+        return;
+    }
+
+    try {
+        // Delete via API
+        const response = await fetch(`/api/history/${analysisId}`, {
+            method: 'DELETE'
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete analysis');
+        }
+
+        const data = await response.json();
+
+        if (!data.success) {
+            throw new Error(data.error || 'Failed to delete analysis');
+        }
+
+        // Reload history list
+        await openHistoryModal();
+
+    } catch (error) {
+        console.error('Error deleting analysis:', error);
+        alert(`Failed to delete analysis: ${error.message}`);
+    }
+}
+
+/**
+ * Close history modal
+ */
+function closeHistoryModal() {
+    const historyModal = document.getElementById('history-modal');
+    if (historyModal) {
+        historyModal.classList.add('hidden');
+    }
+}
+
+/**
+ * Helper function to get current language
+ */
+function getCurrentLanguage() {
+    return document.documentElement.getAttribute('data-lang') || 'en';
+}
+
+/**
+ * Helper function to escape HTML
+ */
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// Event Listeners for History
+
+// History button
+const historyBtn = document.getElementById('history-btn');
+if (historyBtn) {
+    historyBtn.addEventListener('click', openHistoryModal);
+}
+
+// History modal close button
+const historyModalClose = document.getElementById('history-modal-close');
+if (historyModalClose) {
+    historyModalClose.addEventListener('click', closeHistoryModal);
+}
+
+// Close modal when clicking outside
+const historyModal = document.getElementById('history-modal');
+if (historyModal) {
+    historyModal.addEventListener('click', (e) => {
+        if (e.target === historyModal) {
+            closeHistoryModal();
+        }
+    });
+}
