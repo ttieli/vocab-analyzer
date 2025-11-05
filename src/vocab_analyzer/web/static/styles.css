@@ -425,8 +425,33 @@ header {
 .cefr-distribution h4 {
     font-size: var(--font-size-lg);
     font-weight: var(--font-weight-bold);
-    margin-bottom: var(--space-6);
+    margin-bottom: var(--space-4);
     color: var(--text-color);
+}
+
+/* CEFR Level Guide */
+.cefr-guide {
+    background: #f8fafc;
+    border-left: 4px solid var(--primary-color);
+    padding: var(--space-4);
+    margin-bottom: var(--space-6);
+    border-radius: 8px;
+}
+
+.cefr-guide-item {
+    font-size: var(--font-size-sm);
+    line-height: 1.6;
+    color: var(--text-secondary);
+    margin-bottom: var(--space-2);
+}
+
+.cefr-guide-item:last-child {
+    margin-bottom: 0;
+}
+
+.cefr-guide-item strong {
+    color: var(--primary-color);
+    font-weight: var(--font-weight-semibold);
 }
 
 .stat-bar {
