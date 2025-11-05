@@ -14,6 +14,7 @@ from werkzeug.utils import secure_filename
 
 from .progress import ProgressState, ProgressTracker
 from .session import ErrorInfo, SessionStatus, UploadedFile, create_session, get_session
+from .history import get_history_manager
 
 # Create blueprint for web routes
 web_bp = Blueprint('web', __name__)
@@ -331,6 +332,15 @@ def analyze_file_background(session_id: UUID):
         # We'll serialize it when downloading
         session.mark_completed(result)
 
+        # Save analysis to history
+        try:
+            history_manager = get_history_manager()
+            history_manager.save_analysis(result, session.uploaded_file.filename)
+            current_app.logger.info(f"Saved analysis to history for file: {session.uploaded_file.filename}")
+        except Exception as e:
+            # Log error but don't fail the analysis if history save fails
+            current_app.logger.error(f"Failed to save analysis to history: {e}")
+
     except Exception as e:
         error = ErrorInfo(
             code="ANALYSIS_ERROR",
@@ -638,4 +648,106 @@ def translate_text():
             "error": "Translation failed",
             "error_cn": "翻译失败",
             "code": "TRANSLATION_FAILED"
+        }), 500
+
+
+@web_bp.route('/api/history', methods=['GET'])
+def get_history():
+    """Get all analysis history entries.
+
+    Returns:
+        JSON response with list of all history entries (metadata only)
+    """
+    try:
+        history_manager = get_history_manager()
+        entries = history_manager.get_all_entries()
+
+        return jsonify({
+            "success": True,
+            "count": len(entries),
+            "entries": entries
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error retrieving history: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to retrieve history",
+            "error_cn": "无法获取历史记录",
+            "code": "HISTORY_LOAD_ERROR"
+        }), 500
+
+
+@web_bp.route('/api/history/<int:analysis_id>', methods=['GET'])
+def get_history_analysis(analysis_id: int):
+    """Get a specific analysis from history.
+
+    Args:
+        analysis_id: ID of the analysis to retrieve
+
+    Returns:
+        JSON response with full analysis data or error
+    """
+    try:
+        history_manager = get_history_manager()
+        analysis = history_manager.get_analysis(analysis_id)
+
+        if not analysis:
+            return jsonify({
+                "success": False,
+                "error": "Analysis not found",
+                "error_cn": "未找到分析记录",
+                "code": "ANALYSIS_NOT_FOUND"
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "analysis": analysis
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error retrieving analysis {analysis_id}: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to retrieve analysis",
+            "error_cn": "无法获取分析记录",
+            "code": "ANALYSIS_LOAD_ERROR"
+        }), 500
+
+
+@web_bp.route('/api/history/<int:analysis_id>', methods=['DELETE'])
+def delete_history_analysis(analysis_id: int):
+    """Delete a specific analysis from history.
+
+    Args:
+        analysis_id: ID of the analysis to delete
+
+    Returns:
+        JSON response with success status or error
+    """
+    try:
+        history_manager = get_history_manager()
+        success = history_manager.delete_analysis(analysis_id)
+
+        if not success:
+            return jsonify({
+                "success": False,
+                "error": "Analysis not found",
+                "error_cn": "未找到分析记录",
+                "code": "ANALYSIS_NOT_FOUND"
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "message": "Analysis deleted successfully",
+            "message_cn": "分析记录已删除"
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error deleting analysis {analysis_id}: {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to delete analysis",
+            "error_cn": "无法删除分析记录",
+            "code": "ANALYSIS_DELETE_ERROR"
         }), 500
