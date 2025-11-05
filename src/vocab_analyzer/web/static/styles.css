@@ -2711,5 +2711,223 @@ select:focus-visible,
    =================================================================== */
 
 /* ===================================================================
+   HISTORY FUNCTIONALITY STYLES
+   =================================================================== */
+
+/* Header Layout */
+header {
+    margin-bottom: var(--space-8);
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: var(--space-4);
+    flex-wrap: wrap;
+}
+
+.header-title {
+    flex: 1;
+}
+
+/* History Button */
+.history-btn {
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: var(--space-3) var(--space-5);
+    font-size: var(--font-size-base);
+    font-weight: var(--font-weight-semibold);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    white-space: nowrap;
+}
+
+.history-btn:hover {
+    background: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.history-btn:active {
+    background: var(--primary-active);
+    transform: translateY(0);
+}
+
+.history-btn:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+/* History Modal */
+.history-modal-content {
+    max-width: 800px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+.history-modal-content h2 {
+    margin-bottom: var(--space-6);
+    padding-bottom: var(--space-4);
+    border-bottom: 2px solid var(--border-color);
+}
+
+/* History List */
+.history-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+}
+
+/* History Loading/Empty/Error States */
+.history-loading,
+.history-empty,
+.history-error {
+    text-align: center;
+    padding: var(--space-8);
+    color: var(--text-secondary);
+    font-size: var(--font-size-lg);
+}
+
+.history-error {
+    color: var(--error-color);
+}
+
+/* History Item */
+.history-item {
+    background: var(--background);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: var(--space-5);
+    transition: all 0.2s;
+}
+
+.history-item:hover {
+    border-color: var(--primary-color);
+    box-shadow: var(--shadow);
+}
+
+.history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: var(--space-3);
+    gap: var(--space-3);
+}
+
+.history-item-title {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    flex: 1;
+    min-width: 0; /* Allow text truncation */
+}
+
+.history-item-id {
+    background: var(--primary-color);
+    color: white;
+    padding: var(--space-1) var(--space-3);
+    border-radius: 4px;
+    font-size: var(--font-size-sm);
+    font-weight: var(--font-weight-semibold);
+    flex-shrink: 0;
+}
+
+.history-item-filename {
+    font-size: var(--font-size-lg);
+    font-weight: var(--font-weight-semibold);
+    color: var(--text-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.history-item-delete {
+    background: none;
+    border: none;
+    font-size: var(--font-size-xl);
+    cursor: pointer;
+    padding: var(--space-2);
+    border-radius: 4px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    min-width: 44px;
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.history-item-delete:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.history-item-delete:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+}
+
+.history-item-info {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    margin-bottom: var(--space-4);
+}
+
+.history-item-date,
+.history-item-stats {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+}
+
+.history-item-load {
+    width: 100%;
+    margin-top: var(--space-2);
+}
+
+/* Responsive History Styles */
+@media (max-width: 767px) {
+    .header-content {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .history-btn {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .history-modal-content {
+        max-height: 85vh;
+    }
+
+    .history-item {
+        padding: var(--space-4);
+    }
+
+    .history-item-header {
+        flex-wrap: wrap;
+    }
+
+    .history-item-title {
+        flex-basis: 100%;
+        margin-bottom: var(--space-2);
+    }
+
+    .history-item-filename {
+        font-size: var(--font-size-base);
+    }
+}
+
+/* ===================================================================
+   END OF HISTORY STYLES
+   =================================================================== */
+
+/* ===================================================================
    END OF STYLES
    =================================================================== */

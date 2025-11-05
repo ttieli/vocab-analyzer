@@ -9,14 +9,22 @@
 <body>
     <div class="container">
         <header>
-            <h1 class="bilingual">
-                <span class="en">📚 Vocabulary Analyzer</span>
-                <span class="cn">词汇分析器</span>
-            </h1>
-            <p class="subtitle bilingual">
-                <span class="en">Analyze English book vocabulary by CEFR levels</span>
-                <span class="cn">按 CEFR 级别分析英文书籍词汇</span>
-            </p>
+            <div class="header-content">
+                <div class="header-title">
+                    <h1 class="bilingual">
+                        <span class="en">📚 Vocabulary Analyzer</span>
+                        <span class="cn">词汇分析器</span>
+                    </h1>
+                    <p class="subtitle bilingual">
+                        <span class="en">Analyze English book vocabulary by CEFR levels</span>
+                        <span class="cn">按 CEFR 级别分析英文书籍词汇</span>
+                    </p>
+                </div>
+                <button id="history-btn" class="history-btn bilingual" title="View analysis history / 查看历史记录">
+                    <span class="en">📋 History</span>
+                    <span class="cn">历史记录</span>
+                </button>
+            </div>
         </header>
 
         <!-- Upload Section -->
@@ -407,6 +415,20 @@
                     <span class="en">Try Again</span>
                     <span class="cn">重试</span>
                 </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- History Modal -->
+    <div id="history-modal" class="modal hidden">
+        <div class="modal-content history-modal-content">
+            <span class="modal-close" id="history-modal-close">&times;</span>
+            <h2 class="bilingual">
+                <span class="en">📋 Analysis History</span>
+                <span class="cn">分析历史记录</span>
+            </h2>
+            <div id="history-list" class="history-list">
+                <!-- History entries will be populated by JavaScript -->
             </div>
         </div>
     </div>
