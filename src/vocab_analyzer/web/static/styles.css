@@ -2142,6 +2142,7 @@ select:focus-visible,
 /* Phase 3: CEFR-colored word styles */
 .cefr-word {
     cursor: pointer;
+    border-bottom: 2px solid #999; /* Default gray underline */
     transition: background-color 0.2s ease, border-color 0.2s ease;
     padding-bottom: 2px;
     font-weight: 500;
@@ -2149,7 +2150,7 @@ select:focus-visible,
 
 .cefr-word:hover {
     background-color: rgba(0, 0, 0, 0.05);
-    border-bottom-width: 3px;
+    border-bottom-width: 3px !important;
 }
 
 .cefr-word:focus {
@@ -2159,38 +2160,38 @@ select:focus-visible,
 
 /* T009: CEFR Level Colors with solid underlines (matching badge colors from Feature 003) */
 .cefr-word[data-level="A1"] {
-    color: #166534;
-    border-bottom: 2px solid #22c55e;
+    color: #166534 !important;
+    border-bottom-color: #22c55e !important;
 }
 
 .cefr-word[data-level="A2"] {
-    color: #1e40af;
-    border-bottom: 2px solid #3b82f6;
+    color: #1e40af !important;
+    border-bottom-color: #3b82f6 !important;
 }
 
 .cefr-word[data-level="B1"] {
-    color: #92400e;
-    border-bottom: 2px solid #f59e0b;
+    color: #92400e !important;
+    border-bottom-color: #f59e0b !important;
 }
 
 .cefr-word[data-level="B2"] {
-    color: #9a3412;
-    border-bottom: 2px solid #f97316;
+    color: #9a3412 !important;
+    border-bottom-color: #f97316 !important;
 }
 
 .cefr-word[data-level="C1"] {
-    color: #991b1b;
-    border-bottom: 2px solid #ef4444;
+    color: #991b1b !important;
+    border-bottom-color: #ef4444 !important;
 }
 
 .cefr-word[data-level="C2"] {
-    color: #6b21a8;
-    border-bottom: 2px solid #a855f7;
+    color: #6b21a8 !important;
+    border-bottom-color: #a855f7 !important;
 }
 
 .cefr-word[data-level="C2+"] {
-    color: #6b21a8;
-    border-bottom: 2px solid #a855f7;
+    color: #6b21a8 !important;
+    border-bottom-color: #a855f7 !important;
 }
 
 /* T010: Search highlighting */
