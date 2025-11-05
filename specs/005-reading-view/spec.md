@@ -23,6 +23,16 @@ A focused reading experience that transforms the vocabulary analyzer from an ana
 
 ---
 
+## Clarifications
+
+### Session 2025-11-05
+
+- Q: How to handle phrasal verbs in reading view? → A: Color only individual words (first word of multi-word phrasal verbs like "make" in "make up")
+- Q: Should we show a CEFR legend in reading view? → A: No legend - reading view shows only word underline colors to indicate CEFR levels, no detailed explanations
+- Q: What to do if processed_text is missing or empty? → A: Always show reading tab, display "暂无文本 / No text available" message in panel
+
+---
+
 ## User Scenarios & Testing
 
 ### User Story 1 - Seamless View Switching (Priority: P0)
@@ -576,26 +586,21 @@ localStorage.setItem('reading-scroll-position', scrollTop);
 4. **Q: Should uncolored words (filtered out) be grayed out or black?**
    - **A**: BLACK - Maintain normal reading flow. Graying out would be distracting and reduce readability.
 
+5. **Q: How to handle phrasal verbs in reading view?**
+   - **A**: Color only individual words - for multi-word phrasal verbs like "make up", only the first word ("make") is colored. When clicked, `findWordData()` detects the full phrasal verb and displays the complete definition in the modal.
+   - **Rationale**: Simplest implementation, avoids multi-word span detection complexity, allows for future enhancement based on user feedback.
+
+6. **Q: Should we show a CEFR legend in reading view?**
+   - **A**: NO - Reading view shows only word underline colors (dotted border-bottom) to indicate CEFR levels. No legend, labels, or explanations displayed. Maintains clean, immersive reading experience.
+   - **Rationale**: Users learn colors from vocabulary view tabs. Adding legend would clutter interface and distract from reading flow. Can add in future if user testing reveals confusion.
+
+7. **Q: What to do if processed_text is missing or empty?**
+   - **A**: Always show the "全文阅读 / Reading View" tab. Display bilingual empty state message "暂无文本 / No text available" in the reading panel when text is missing or empty.
+   - **Rationale**: More transparent UX - users understand why reading view is empty. Hiding tab would be confusing. Allows for error recovery if analysis needs to be retried. Consistent with existing patterns (other tabs show empty states).
+
 ### Open Questions (To Be Resolved During Implementation)
 
-1. **Q: How to handle phrasal verbs in reading view?**
-   - **Options**:
-     - A) Color only the first word ("make" in "make up")
-     - B) Color both words and detect phrasal verb on click
-   - **Recommendation**: Start with Option A (simpler), upgrade to B if users report confusion
-
-2. **Q: Should we show a CEFR legend in reading view?**
-   - **Options**:
-     - A) Always visible legend (A1=green, A2=blue, etc.)
-     - B) Tooltip legend on hover
-     - C) No legend (assume users know from vocabulary view)
-   - **Recommendation**: Option C for MVP - Keep reading view clean. Add if user testing shows confusion.
-
-3. **Q: What to do if processed_text is missing or empty?**
-   - **Options**:
-     - A) Hide reading tab entirely
-     - B) Show tab but display "No text available" message
-   - **Recommendation**: Option B - More transparent and allows for future error recovery
+**None** - All critical ambiguities have been resolved during clarification session 2025-11-05.
 
 ---
 
@@ -633,7 +638,7 @@ localStorage.setItem('reading-scroll-position', scrollTop);
 - [T016] Implement `saveReadingPosition()` on tab switch
 - [T017] Implement `restoreReadingPosition()` on tab activate
 - [T018] Add smooth fade transition when switching to reading view
-- [T019] Handle empty `processed_text` gracefully
+- [T019] Handle empty `processed_text` - display "暂无文本 / No text available" message, keep tab visible
 - [T020] Add responsive typography (16px → 18px)
 - [T021] Test scroll position persistence across tab switches
 
@@ -686,7 +691,7 @@ localStorage.setItem('reading-scroll-position', scrollTop);
 | Risk | Probability | Impact | Mitigation |
 |------|-------------|--------|------------|
 | Performance issues with 500KB+ texts | Medium | High | Profile early, add virtual scrolling if needed, show warning for very large files |
-| Phrasal verb detection complexity | Medium | Medium | Start with simple approach (color first word only), iterate based on feedback |
+| Phrasal verb detection complexity | Low | Low | RESOLVED: Color first word only, `findWordData()` detects full phrase on click |
 | User confusion about colored vs plain text | Low | Medium | Add optional legend in future iteration if user testing reveals confusion |
 | Scroll jank on low-end devices | Medium | Medium | Test on mid-range Android device, optimize DOM structure if needed |
 | Translation API timeout in modal | Low | Low | Already handled by Feature 002 error states |
