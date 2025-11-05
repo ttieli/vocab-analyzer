@@ -212,6 +212,12 @@ async function showResults() {
         const text = await blob.text();
         analysisResults = JSON.parse(text);
 
+        // DEBUG: Log analysis results
+        console.log('[DEBUG] Analysis results loaded');
+        console.log('[DEBUG] Has processed_text:', 'processed_text' in analysisResults);
+        console.log('[DEBUG] processed_text type:', typeof analysisResults.processed_text);
+        console.log('[DEBUG] processed_text length:', analysisResults.processed_text ? analysisResults.processed_text.length : 0);
+
         // Display statistics summary
         displayStatistics(analysisResults);
 
@@ -938,6 +944,12 @@ function findWordData(token, analysisResults) {
  */
 function parseTextForReading(processedText, analysisResults) {
     const readingContent = document.getElementById('reading-content');
+
+    // DEBUG: Log to verify processed_text is available
+    console.log('[DEBUG] parseTextForReading called');
+    console.log('[DEBUG] processedText type:', typeof processedText);
+    console.log('[DEBUG] processedText length:', processedText ? processedText.length : 0);
+    console.log('[DEBUG] processedText preview:', processedText ? processedText.substring(0, 100) : 'null/undefined');
 
     // T031: Show loading skeleton for large texts
     const startTime = performance.now();
