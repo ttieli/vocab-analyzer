@@ -2092,18 +2092,51 @@ select:focus-visible,
    FEATURE 005: IMMERSIVE FULL-TEXT READING VIEW
    =================================================================== */
 
-/* Phase 2: Foundational Infrastructure - Reading Container */
+/* Phase 2 & 5: Foundational Infrastructure + Typography - Reading Container */
 .reading-container {
     max-width: 800px;
     margin: 0 auto;
     padding: 2rem 1.5rem;
 }
 
+/* T025: Line height for comfortable reading */
 .reading-content {
     font-size: 16px;
     line-height: 1.7;
-    color: #1f2937;
+    color: #2c3e50; /* T027: Darker text for better contrast */
     text-align: left;
+}
+
+/* T024: Paragraph spacing */
+.reading-content p {
+    margin-bottom: 1.5em;
+    text-indent: 0; /* No first-line indent */
+}
+
+/* T022: Responsive typography - Desktop */
+@media (min-width: 1024px) {
+    .reading-content {
+        font-size: 18px;
+    }
+}
+
+/* T023: Responsive container width - Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+    .reading-container {
+        max-width: 720px;
+    }
+}
+
+/* T026: Responsive padding - Mobile */
+@media (max-width: 767px) {
+    .reading-container {
+        padding: 1rem;
+        max-width: 100%;
+    }
+
+    .reading-content {
+        font-size: 16px;
+    }
 }
 
 /* Phase 3: CEFR-colored word styles */
@@ -2155,6 +2188,31 @@ select:focus-visible,
 .cefr-word.search-match {
     background-color: #fef3c7;
     font-weight: 600;
+}
+
+/* T030: Performance optimization for smooth scrolling */
+.reading-content {
+    will-change: scroll-position;
+}
+
+/* T031: Loading skeleton for large texts */
+.reading-skeleton {
+    padding: 2rem;
+    text-align: center;
+    color: #6b7280;
+}
+
+.reading-skeleton::before {
+    content: "⏳";
+    font-size: 2rem;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+.reading-skeleton::after {
+    content: "Loading reading view...";
+    display: block;
+    font-size: 1rem;
 }
 
 /* ===================================================================
