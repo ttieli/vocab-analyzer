@@ -108,39 +108,13 @@ class AnalysisHistoryManager:
             file_path = f"analysis_{analysis_id}.json"
             full_path = self.history_dir / file_path
 
-            # Convert analysis to dictionary
-            analysis_dict = {
-                "id": analysis_id,
-                "filename": original_filename,
-                "timestamp": datetime.now().isoformat(),
-                "source_file": analysis.source_file,
-                "analysis_date": analysis.analysis_date.isoformat(),
-                "words": {
-                    lemma: {
-                        "lemma": word.lemma,
-                        "original_forms": list(word.original_forms),
-                        "pos_tags": list(word.pos_tags),
-                        "cefr_level": word.cefr_level,
-                        "frequency": word.frequency,
-                        "occurrences": word.occurrences,
-                        "contexts": word.contexts,
-                    }
-                    for lemma, word in analysis.words.items()
-                },
-                "phrases": {
-                    phrase_text: {
-                        "phrase": phrase.phrase,
-                        "phrase_type": phrase.phrase_type,
-                        "cefr_level": phrase.cefr_level,
-                        "frequency": phrase.frequency,
-                        "occurrences": phrase.occurrences,
-                        "contexts": phrase.contexts,
-                    }
-                    for phrase_text, phrase in analysis.phrases.items()
-                },
-                "statistics": analysis.statistics,
-                "processed_text": analysis.processed_text,
-            }
+            # Convert analysis to dictionary using built-in method
+            analysis_dict = analysis.to_dict(include_words=True, include_phrases=True)
+
+            # Add history-specific fields
+            analysis_dict["id"] = analysis_id
+            analysis_dict["filename"] = original_filename
+            analysis_dict["timestamp"] = datetime.now().isoformat()
 
             # Save analysis file
             with open(full_path, "w", encoding="utf-8") as f:

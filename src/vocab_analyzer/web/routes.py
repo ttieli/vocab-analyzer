@@ -103,7 +103,7 @@ def upload_file():
     # Start analysis in background thread
     thread = threading.Thread(
         target=analyze_file_background,
-        args=(session.session_id,)
+        args=(session.session_id, current_app._get_current_object())
     )
     thread.daemon = True
     thread.start()
@@ -181,7 +181,7 @@ def analyze_text():
     # Start analysis in background thread
     thread = threading.Thread(
         target=analyze_file_background,
-        args=(session.session_id,)
+        args=(session.session_id, current_app._get_current_object())
     )
     thread.daemon = True
     thread.start()
@@ -279,16 +279,31 @@ def create_mock_error_session():
     return session
 
 
-def analyze_file_background(session_id: UUID):
+def analyze_file_background(session_id: UUID, app=None):
     """Analyze uploaded file in background thread.
 
     Args:
         session_id: UUID of the session to process
+        app: Flask application instance (for app context)
     """
     session = get_session(session_id)
     if not session:
         return
 
+    # Use app context if provided
+    if app:
+        with app.app_context():
+            _do_analysis(session)
+    else:
+        _do_analysis(session)
+
+
+def _do_analysis(session):
+    """Perform the actual analysis work.
+
+    Args:
+        session: Analysis session object
+    """
     try:
         # Import analyzer (done here to avoid circular imports)
         from ..core.analyzer import VocabularyAnalyzer
