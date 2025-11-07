@@ -7,6 +7,7 @@ file upload, analysis, progress tracking, and result download.
 import os
 import threading
 from pathlib import Path
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 from flask import Blueprint, Response, current_app, jsonify, request, send_file, stream_with_context
@@ -765,4 +766,111 @@ def delete_history_analysis(analysis_id: int):
             "error": "Failed to delete analysis",
             "error_cn": "无法删除分析记录",
             "code": "ANALYSIS_DELETE_ERROR"
+        }), 500
+
+
+# ===================================================================
+# Dictionary API Routes
+# ===================================================================
+
+def _load_word_from_csv(word: str) -> Optional[Dict[str, Any]]:
+    """Load word data from CEFR wordlist CSV.
+
+    Args:
+        word: The word to look up (case-insensitive)
+
+    Returns:
+        Dictionary with word data or None if not found
+    """
+    import csv
+    from pathlib import Path
+
+    # Get CSV path
+    project_root = Path(__file__).parent.parent.parent.parent
+    csv_path = project_root / "data" / "vocabularies" / "cefr_wordlist.csv"
+
+    if not csv_path.exists():
+        current_app.logger.error(f"Word list CSV not found: {csv_path}")
+        return None
+
+    word_lower = word.strip().lower()
+
+    try:
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                if row['word'].lower() == word_lower:
+                    # Extract examples from translation if available
+                    translation_text = row.get('translation', '')
+                    examples = []
+
+                    # Parse translation - format is "n. definition\na. definition\nv. definition"
+                    if translation_text:
+                        parts = translation_text.split('\n')
+                        # Take first 3 parts as examples if they contain definitions
+                        examples = [p.strip() for p in parts[:3] if p.strip()]
+
+                    return {
+                        "word": row['word'],
+                        "level": row.get('level', ''),
+                        "word_type": row.get('pos', ''),  # Part of speech
+                        "definition_cn": translation_text,
+                        "phonetic": row.get('phonetic', ''),
+                        "examples": examples,
+                        "collins": row.get('collins', ''),
+                        "oxford": row.get('oxford', ''),
+                        "frequency": row.get('frq', '')
+                    }
+
+        return None
+
+    except Exception as e:
+        current_app.logger.error(f"Error reading word list CSV: {e}")
+        return None
+
+@web_bp.route('/api/dictionary/<word>')
+def lookup_word(word):
+    """Look up a word in the dictionary.
+
+    Args:
+        word: The word to look up
+
+    Returns:
+        JSON response with word information
+    """
+    try:
+        # Clean and normalize the word
+        word = word.strip().lower()
+
+        if not word:
+            return jsonify({
+                "success": False,
+                "error": "Word parameter is required",
+                "error_cn": "请提供要查询的单词",
+                "code": "WORD_REQUIRED"
+            }), 400
+
+        # Get word data from CSV
+        word_data = _load_word_from_csv(word)
+
+        if not word_data:
+            return jsonify({
+                "success": False,
+                "error": f"Word '{word}' not found in dictionary",
+                "error_cn": f"词典中未找到单词 '{word}'",
+                "code": "WORD_NOT_FOUND"
+            }), 404
+
+        return jsonify({
+            "success": True,
+            "word": word_data
+        }), 200
+
+    except Exception as e:
+        current_app.logger.error(f"Error looking up word '{word}': {e}")
+        return jsonify({
+            "success": False,
+            "error": "Failed to look up word",
+            "error_cn": "单词查询失败",
+            "code": "WORD_LOOKUP_ERROR"
         }), 500

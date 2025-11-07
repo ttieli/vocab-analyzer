@@ -2042,3 +2042,168 @@ if (historyModal) {
         }
     });
 }
+
+// ===================================================================
+// Dictionary Functions
+// ===================================================================
+
+/**
+ * Open dictionary modal
+ */
+function openDictionaryModal() {
+    const modal = document.getElementById('dictionary-modal');
+    modal.classList.remove('hidden');
+    document.getElementById('dictionary-search-input').focus();
+}
+
+/**
+ * Close dictionary modal
+ */
+function closeDictionaryModal() {
+    const modal = document.getElementById('dictionary-modal');
+    modal.classList.add('hidden');
+}
+
+/**
+ * Search for a word in the dictionary
+ */
+async function searchDictionary() {
+    const searchInput = document.getElementById('dictionary-search-input');
+    const word = searchInput.value.trim().toLowerCase();
+
+    if (!word) {
+        return;
+    }
+
+    const resultDiv = document.getElementById('dictionary-result');
+    const emptyDiv = document.getElementById('dictionary-empty');
+    const loadingDiv = document.getElementById('dictionary-loading');
+    const errorDiv = document.getElementById('dictionary-error');
+
+    // Show loading state
+    resultDiv.classList.add('hidden');
+    emptyDiv.classList.add('hidden');
+    errorDiv.classList.add('hidden');
+    loadingDiv.classList.remove('hidden');
+
+    try {
+        const response = await fetch(`/api/dictionary/${encodeURIComponent(word)}`);
+        const data = await response.json();
+
+        loadingDiv.classList.add('hidden');
+
+        if (!response.ok || !data.success) {
+            throw new Error(data.error || 'Word not found');
+        }
+
+        // Display result
+        displayDictionaryResult(data.word);
+        resultDiv.classList.remove('hidden');
+
+    } catch (error) {
+        loadingDiv.classList.add('hidden');
+        errorDiv.classList.remove('hidden');
+        document.getElementById('dictionary-error-text').textContent =
+            getCurrentLanguage() === 'en'
+                ? `Word not found or error: ${error.message}`
+                : `未找到单词或发生错误: ${error.message}`;
+    }
+}
+
+/**
+ * Display dictionary result
+ */
+function displayDictionaryResult(wordData) {
+    const resultDiv = document.getElementById('dictionary-result');
+
+    const levelBadge = wordData.level ?
+        `<span class="dictionary-level-badge">${escapeHtml(wordData.level)}</span>` : '';
+
+    const phoneticText = wordData.phonetic ?
+        `<span class="dictionary-phonetic">${escapeHtml(wordData.phonetic)}</span>` : '';
+
+    const examples = wordData.examples && wordData.examples.length > 0 ?
+        `<div class="dictionary-examples">
+            ${wordData.examples.slice(0, 3).map(ex =>
+                `<div class="dictionary-example-item">${escapeHtml(ex)}</div>`
+            ).join('')}
+        </div>` : '';
+
+    resultDiv.innerHTML = `
+        <div class="dictionary-word">
+            <span>${escapeHtml(wordData.word)}</span>
+            ${phoneticText}
+            ${levelBadge}
+        </div>
+
+        ${wordData.definition_cn ? `
+        <div class="dictionary-definition">
+            <div class="dictionary-label bilingual">
+                <span class="en">Chinese Definition</span>
+                <span class="cn">中文释义</span>
+            </div>
+            <div class="dictionary-text">${escapeHtml(wordData.definition_cn)}</div>
+        </div>
+        ` : ''}
+
+        ${wordData.word_type ? `
+        <div class="dictionary-definition">
+            <div class="dictionary-label bilingual">
+                <span class="en">Part of Speech</span>
+                <span class="cn">词性</span>
+            </div>
+            <div class="dictionary-text">${escapeHtml(wordData.word_type)}</div>
+        </div>
+        ` : ''}
+
+        ${examples ? `
+        <div class="dictionary-definition">
+            <div class="dictionary-label bilingual">
+                <span class="en">Examples</span>
+                <span class="cn">例句</span>
+            </div>
+            ${examples}
+        </div>
+        ` : ''}
+    `;
+}
+
+// Event Listeners for Dictionary
+
+// Dictionary button
+const dictionaryBtn = document.getElementById('dictionary-btn');
+if (dictionaryBtn) {
+    dictionaryBtn.addEventListener('click', openDictionaryModal);
+}
+
+// Dictionary search button
+const dictionarySearchBtn = document.getElementById('dictionary-search-btn');
+if (dictionarySearchBtn) {
+    dictionarySearchBtn.addEventListener('click', searchDictionary);
+}
+
+// Dictionary search on Enter key
+const dictionarySearchInput = document.getElementById('dictionary-search-input');
+if (dictionarySearchInput) {
+    dictionarySearchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            searchDictionary();
+        }
+    });
+}
+
+// Dictionary modal close button
+const dictionaryModalClose = document.getElementById('dictionary-modal-close');
+if (dictionaryModalClose) {
+    dictionaryModalClose.addEventListener('click', closeDictionaryModal);
+}
+
+// Close modal when clicking outside
+const dictionaryModal = document.getElementById('dictionary-modal');
+if (dictionaryModal) {
+    dictionaryModal.addEventListener('click', (e) => {
+        if (e.target === dictionaryModal) {
+            closeDictionaryModal();
+        }
+    });
+}
