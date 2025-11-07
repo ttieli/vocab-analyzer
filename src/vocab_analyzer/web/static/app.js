@@ -1899,7 +1899,8 @@ async function loadHistoryAnalysis(analysisId) {
 
     try {
         // Show loading state
-        showSection('progress');
+        hideAllSections();
+        showSection(progressSection);
         closeHistoryModal();
         updateProgress(0, 'Loading analysis from history... / 从历史记录加载分析...');
 
@@ -1937,8 +1938,15 @@ async function loadHistoryAnalysis(analysisId) {
 
         // Display results
         setTimeout(() => {
-            displayAnalysisResults(processedAnalysis);
-            showSection('results');
+            hideAllSections();
+            showSection(resultsSection);
+
+            // Display statistics and words
+            displayStatistics(processedAnalysis);
+            displayWords(processedAnalysis);
+
+            // Setup event listeners for filters
+            setupInteractiveFilters();
         }, 500);
 
     } catch (error) {
