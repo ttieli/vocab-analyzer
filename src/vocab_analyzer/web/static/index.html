@@ -20,10 +20,16 @@
                         <span class="cn">按 CEFR 级别分析英文书籍词汇</span>
                     </p>
                 </div>
-                <button id="history-btn" class="history-btn bilingual" title="View analysis history / 查看历史记录">
-                    <span class="en">📋 History</span>
-                    <span class="cn">历史记录</span>
-                </button>
+                <div class="header-buttons">
+                    <button id="dictionary-btn" class="dictionary-btn bilingual" title="Word dictionary / 词典查询">
+                        <span class="en">📖 Dictionary</span>
+                        <span class="cn">词典</span>
+                    </button>
+                    <button id="history-btn" class="history-btn bilingual" title="View analysis history / 查看历史记录">
+                        <span class="en">📋 History</span>
+                        <span class="cn">历史记录</span>
+                    </button>
+                </div>
             </div>
         </header>
 
@@ -429,6 +435,57 @@
             </h2>
             <div id="history-list" class="history-list">
                 <!-- History entries will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Dictionary Modal -->
+    <div id="dictionary-modal" class="modal hidden">
+        <div class="modal-content dictionary-modal-content">
+            <span class="modal-close" id="dictionary-modal-close">&times;</span>
+            <h2 class="bilingual">
+                <span class="en">📖 Word Dictionary</span>
+                <span class="cn">词典查询</span>
+            </h2>
+
+            <!-- Search Box -->
+            <div class="dictionary-search">
+                <input type="text"
+                       id="dictionary-search-input"
+                       class="dictionary-search-input bilingual"
+                       placeholder="Enter a word to look up / 输入要查询的单词"
+                       autocomplete="off">
+                <button id="dictionary-search-btn" class="dictionary-search-btn bilingual">
+                    <span class="en">🔍 Search</span>
+                    <span class="cn">查询</span>
+                </button>
+            </div>
+
+            <!-- Results Display -->
+            <div id="dictionary-result" class="dictionary-result hidden">
+                <!-- Result will be populated by JavaScript -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="dictionary-empty" class="dictionary-empty">
+                <p class="bilingual">
+                    <span class="en">Enter a word above to look up its definition, translation, and examples.</span>
+                    <span class="cn">在上方输入单词以查询其释义、翻译和例句。</span>
+                </p>
+            </div>
+
+            <!-- Loading State -->
+            <div id="dictionary-loading" class="dictionary-loading hidden">
+                <div class="spinner"></div>
+                <p class="bilingual">
+                    <span class="en">Looking up word...</span>
+                    <span class="cn">正在查询...</span>
+                </p>
+            </div>
+
+            <!-- Error State -->
+            <div id="dictionary-error" class="dictionary-error hidden">
+                <p id="dictionary-error-text"></p>
             </div>
         </div>
     </div>
